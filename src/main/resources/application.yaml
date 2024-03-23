@@ -1,0 +1,103 @@
+server:
+  # 服务器的HTTP端口，默认为80
+  port: 8765
+  servlet:
+    # 应用的访问路径
+    context-path: /chat_ai
+  tomcat:
+    # tomcat的URI编码
+    uri-encoding: UTF-8
+    # tomcat最大线程数，默认为200
+    max-threads: 800
+    # Tomcat启动初始化的线程数，默认值25
+    min-spare-threads: 30
+
+# 日志配置
+logging:
+  level:
+    cn.autumn.chat: INFO
+    org.springframework: INFO
+    io.ebean.SQL: INFO
+    com.github.binarywang.demo.wx.mp: DEBUG
+    me.chanjar.weixin: DEBUG
+
+# Spring配置
+spring:
+  # 资源信息
+  messages:
+    # 国际化资源文件路径
+    basename: static/i18n/messages
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+  # 文件上传
+  servlet:
+    multipart:
+      # 单个文件大小
+      max-file-size: 30MB
+      # 设置总上传的文件大小
+      max-request-size: 60MB
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+
+# 防止XSS攻击
+xss:
+  # 过滤开关
+  enabled: true
+  # 排除链接（多个用逗号分隔）
+  excludes: /system/notice/*
+  # 匹配链接
+  urlPatterns: /system/*,/monitor/*,/tool/*
+
+datasource:
+  default: mysql
+  mysql:
+    username: root
+    password: womima
+    url: jdbc:mysql://localhost:3306/chat_ai?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+
+ebean:
+  ddl:
+    generate: true
+    # 设置为 true 会建表
+    run: true
+#    run: true
+
+redis:
+  database: 0
+  host: 127.0.0.1:6379
+  lettuce:
+    pool:
+      max-active: 8   #最大连接数据库连接数,设 0 为没有限制
+      max-idle: 8     #最大等待连接中的数量,设 0 为没有限制
+      max-wait: -1ms  #最大建立连接等待时间。如果超过此时间将接到异常。设为-1表示无限制。
+      min-idle: 0     #最小等待连接中的数量,设 0 为没有限制
+    shutdown-timeout: 100ms
+  password:
+
+
+wx:
+  miniapp:
+    config:
+      #微信小程序的appid
+      appid: .
+      #微信小程序的Secret
+      secret: ..
+      # 商户号
+      mchId: ...
+      # 商户密钥/ APIv2密钥
+      mchKey: .
+      # p12 证书，退款需要
+      keyPath: apiclient_cert.p12
+      #微信小程序消息服务器配置的token
+      token:
+      #微信小程序消息服务器配置的EncodingAESKey
+      aesKey:
+      msgDataFormat: JSON
+
+zhipuai:
+  apiKey: .
+  apiSecret: .

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SockJS Example</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="sockjs.min.js"></script>
+    <script src="stomp.min.js"></script>
+    <script src="markdown-it.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f8f8f8;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: #333;
+        }
+
+        p {
+            color: #666;
+        }
+
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+<input type="text" id="message"/>
+<button onclick="sendMessage()">Send Message</button>
+<!--<ul id="messages"></ul>-->
+<div id="chat">
+
+</div>
+
+<script>
+    let groupId = 3;
+    // var socket = new SockJS("http://localhost/chat_ai/ws");
+    var socket = new SockJS("/chat_ai/pc/ws");
+    var stompClient = Stomp.over(socket);
+    let md = markdownit();
+    let map = {};
+
+
+    stompClient.connect({'Authorization': 'Bearer admin123'}, function (frame) {
+        console.log('Connected: ' + frame);
+
+        stompClient.subscribe('/topic/' + groupId, function (message) {
+            let msgObj = JSON.parse(message.body);
+            console.warn(msgObj.content)
+            if (msgObj.role === "user") {
+                userQuestion(msgObj);
+            } else {
+                aiAnswer(msgObj);
+            }
+        });
+    });
+
+    function userQuestion(msgObj) {
+        let div = document.createElement("div");
+        div.id = msgObj.msgId
+        div.innerHTML = md.render(msgObj.content);
+        document.getElementById("chat").appendChild(div);
+    }
+
+    function aiAnswer(msgObj) {
+        if (msgObj.initialized) {
+            let fromDiv = document.getElementById(msgObj.answerMsgId);
+            let div = document.createElement("div");
+            let id = "ai" + msgObj.answerMsgId;
+            div.id = id;
+            div.innerHTML = md.render((msgObj.content));
+            map[id] = msgObj.content
+            // fromDiv.append(div);
+            fromDiv.insertAdjacentElement("afterend", div);
+        } else {
+            let id = "ai" + msgObj.answerMsgId;
+            let div = document.getElementById(id);
+            if (!div) return
+            map[id] = map[id] + msgObj.content
+            div.innerHTML = md.render(map[id]);
+            if (msgObj.Completed) {
+                div.innerHTML = div.innerHTML + "完成输出!!!!!";
+            }
+        }
+    }
+
+    function sendMessage() {
+        var message = document.getElementById("message").value;
+        stompClient.send("/chat/sendMessage/" + groupId, {}, message);
+        document.getElementById("message").value = "";
+    }
+</script>
+</body>
+</html>
