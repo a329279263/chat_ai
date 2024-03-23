@@ -53,6 +53,10 @@ public class UserService extends UserDomainService<User> {
      */
     public int checkQaCount() {
         final User user = getByCurrentUser();
+        if (user==null) {
+            saveUser(new User());
+            return 10;
+        }
         if (user.getRemainingQACount() <= 0) {
             throw new BusinessException("剩余问答次数不足，请充值。");
         }

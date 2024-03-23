@@ -9,6 +9,7 @@
     <script src="sockjs.min.js"></script>
     <script src="stomp.min.js"></script>
     <script src="markdown-it.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -42,7 +43,18 @@
 </div>
 
 <script>
-    let groupId = 3;
+    let groupId="1";
+    let token='Bearer admin123';
+    $.ajax({
+        url: '/chat_ai/chat/getLatestByCurrentUser',
+        type: 'GET',
+        headers: {
+            'Authorization': token,
+        },
+        success: function(res) {
+            groupId=res.data.id
+        }
+    });
     // var socket = new SockJS("http://localhost/chat_ai/ws");
     var socket = new SockJS("/chat_ai/pc/ws");
     var stompClient = Stomp.over(socket);
@@ -50,7 +62,7 @@
     let map = {};
 
 
-    stompClient.connect({'Authorization': 'Bearer admin123'}, function (frame) {
+    stompClient.connect({'Authorization': token}, function (frame) {
         console.log('Connected: ' + frame);
 
         stompClient.subscribe('/topic/' + groupId, function (message) {

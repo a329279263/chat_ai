@@ -35,6 +35,10 @@ public class Chat extends BaseEntity {
         this.name = name.substring(0, Math.min(name.length(), 100));
     }
 
+    public Chat(Long id) {
+        this.id=id;
+    }
+
     public List<ChatMessage> getHistoryMessage() {
         messageRecordList.sort(Comparator.comparing(BaseEntity::getId));
         List<ChatMessage> messageList = new ArrayList<>();

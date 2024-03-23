@@ -31,7 +31,7 @@ public class Constant {
     /**
      * 用户初始化问答次数
      */
-    public static final int INIT_QA_COUNT = 10;
+    public static final int INIT_QA_COUNT = 100;
 
 
     /**

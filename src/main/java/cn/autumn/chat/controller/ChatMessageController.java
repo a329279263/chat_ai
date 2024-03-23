@@ -42,6 +42,7 @@ public class ChatMessageController {
     public void sendMessageToGroup(@DestinationVariable Long chatId, String message, StompHeaderAccessor accessor) {
         final String openid = redissonService.getUserToken(accessor.getSessionId());
         ShiroUtils2.setUser(openid);
+        userService.checkQaCount();
         ThreadPoolService.getInstance().submitTask(chatId + ":" + openid, openid, "ai生成", () -> {
             ShiroUtils2.setUser(openid);
             try {

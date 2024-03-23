@@ -1,5 +1,6 @@
 package cn.autumn.chat.service;
 
+import cn.autumn.chat.domain.Chat;
 import cn.autumn.chat.domain.ChatMessageRecord;
 import cn.autumn.chat.domain.UserDomainService;
 import com.zhipu.oapi.service.v4.model.ChatMessageRole;
