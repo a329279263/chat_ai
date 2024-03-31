@@ -6,93 +6,12 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <script src="sockjs.min.js"></script>
-    <script src="stomp.min.js"></script>
-    <script src="markdown-it.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            /*margin: 20px;*/
-            padding: 20px;
-            background-color: #f8f8f8;
-        }
-
-        h1, h2, h3, h4, h5, h6 {
-            color: #333;
-        }
-
-        p {
-            color: #666;
-        }
-
-        code {
-            /*background-color: #f4f4f4;*/
-            /*padding: 2px 4px;*/
-            border-radius: 4px;
-        }
-
-        .container {
-            display: flex;
-            flex-direction: column;
-            height: 90vh;
-        }
-
-        .chat-container {
-            width: 97%;
-            overflow-y: scroll;
-            flex: 1;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .bottom-message-send {
-            margin: auto;
-            flex-direction: column;
-            display: flex;
-        }
-
-        .bottom-message-send textarea {
-            padding: 10px;
-            border-radius: 5px;
-        }
-
-        .message {
-            padding: 10px 20px;
-            margin: 10px 0;
-            border-radius: 5px;
-        }
-
-        .user-message {
-            background-color: #cce6ff;
-        }
-
-        .bot-message {
-            background-color: #d9f2d9;
-        }
-
-        .author {
-            position: fixed;
-            bottom: 20px;
-            right: 40px;
-        }
-
-        .author a {
-            color: #007bff; /* 使用蓝色作为默认链接颜色 */
-            text-decoration: none; /* 移除默认的下划线 */
-            font-family: 'Arial', sans-serif; /* 设置字体 */
-            transition: color 0.3s; /* 为颜色变化添加动画效果 */
-        }
-
-        .author a:hover {
-            color: #0056b3; /* 鼠标悬停时的颜色加深 */
-            text-decoration: underline; /* 鼠标悬停时添加下划线 */
-        }
-    </style>
+    <script src="js/sockjs.min.js"></script>
+    <script src="js/stomp.min.js"></script>
+    <script src="js/markdown-it.js"></script>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script src="js/index.js"></script>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div class="container">
@@ -150,31 +69,90 @@
 
     connect();
 
-    function createMessageElement(msgObj, role) {
+    function userQuestion(msgObj) {
         let div = document.createElement("div");
-        div.id = msgObj.msgId;
+        div.id = msgObj.msgId
         div.innerHTML = md.render(msgObj.content);
-        div.classList.add('message', role === "user" ? 'user-message' : 'bot-message');
+        div.classList.add('message', 'user-message');
+        document.getElementById("chat").appendChild(div);
+        chatScrollToBottom(chat);
+    }
+
+    function aiAnswer(msgObj) {
+        if (msgObj.initialized) {
+            let fromDiv = document.getElementById(msgObj.answerMsgId);
+            let div = document.createElement("div");
+            let id = "ai" + msgObj.answerMsgId;
+            div.id = id;
+            div.innerHTML = md.render((msgObj.content));
+            div.classList.add('message', 'bot-message');
+            map[id] = msgObj.content;
+            // fromDiv.append(div);
+            fromDiv.insertAdjacentElement("afterend", div);
+        } else {
+            let id = "ai" + msgObj.answerMsgId;
+            let div = document.getElementById(id);
+            if (!div) return
+            map[id] = map[id] + msgObj.content
+            div.innerHTML = md.render(map[id]);
+            if (msgObj.completed) {
+                createCopyBtnForCodeBlocks(div)
+                console.log("完成输出")
+            }
+        }
+        chatScrollToBottom(chat);
+    }
+
+    function sendMessage() {
+        stompClient.send("/chat/sendMessage/" + groupId, {}, userInputField.value);
+        userInputField.value = "";
+    }
+
+    function createMessageElement(msgObj) {
+        let div = document.createElement("div");
+        div.id = msgObj.id;
+        div.innerHTML = md.render(msgObj.content);
+        div.classList.add('message', msgObj.role === "user" ? 'user-message' : 'bot-message');
         return div;
     }
 
-    async function renderMessages(messages) {
+
+    function createCopyBtnForCodeBlocks(div) {
+        // 获取所有code标签
+        const codeElements = div.getElementsByTagName('code');
+        // 遍历每个code标签并添加复制按钮
+        Array.from(codeElements).forEach(codeElement => {
+            // 检查code标签是否是代码块的一部分
+            if (isCodeBlock(codeElement)) {
+                let copyBtn = document.createElement('button');
+                copyBtn.textContent = '复制该代码';
+                copyBtn.classList.add('copy-btn');
+                copyBtn.onclick = function () {
+                    // 复制code标签内的内容
+                    copyTextToClipboard(codeElement.textContent);
+                };
+                // 将复制按钮添加到code标签旁边
+                codeElement.insertAdjacentElement('afterend', copyBtn);
+            }
+        });
+    }
+
+    // 在渲染消息后调用此函数
+    function renderMessages(messages) {
         let chatContent = document.createDocumentFragment(); // 用于批量插入DOM
         for (const item of messages) {
             item.initialized = true;
-            let messageElement =  createMessageElement(item, item.role);
+            let messageElement = createMessageElement(item);
             chatContent.appendChild(messageElement);
-
-            // 等待一段时间，但不需要为每次添加元素都滚动
-            await new Promise(resolve => setTimeout(resolve, 500));
         }
-
         // 批量插入所有消息元素
         chat.appendChild(chatContent);
-
-        // 最后滚动到底部
-        chat.scrollTo({top: chat.scrollHeight, behavior: "smooth"});
+        // 为每个消息的code块添加复制按钮
+        const messageDivs = document.querySelectorAll('.message');
+        messageDivs.forEach(div => createCopyBtnForCodeBlocks(div));
+        chatScrollToBottom(chat);
     }
+
 
     // 请求处理
     $.ajax({
@@ -190,55 +168,6 @@
         }
     });
 
-    // 平滑滚动到底部
-    function chatScrollToBottom() {
-        // 如果需要，在这里添加平滑滚动逻辑
-        // 注意：这里没有使用resolve，因为我们不在Promise链中
-        chat.scrollTo({top: chat.scrollHeight, behavior: "smooth"});
-    }
-    function userQuestion(msgObj) {
-        return new Promise((resolve) => {
-            let div = document.createElement("div");
-            div.id = msgObj.msgId
-            div.innerHTML = md.render(msgObj.content);
-            div.classList.add('message', 'user-message');
-            document.getElementById("chat").appendChild(div);
-            chatScrollToBottom(resolve);
-        });
-    }
-
-    function aiAnswer(msgObj) {
-        return new Promise((resolve) => {
-            if (msgObj.initialized) {
-                let fromDiv = document.getElementById(msgObj.answerMsgId);
-                let div = document.createElement("div");
-                let id = "ai" + msgObj.answerMsgId;
-                div.id = id;
-                div.innerHTML = md.render((msgObj.content));
-                div.classList.add('message', 'bot-message');
-                map[id] = msgObj.content;
-                // fromDiv.append(div);
-                fromDiv.insertAdjacentElement("afterend", div);
-            } else {
-                let id = "ai" + msgObj.answerMsgId;
-                let div = document.getElementById(id);
-                if (!div) return
-                map[id] = map[id] + msgObj.content
-                div.innerHTML = md.render(map[id]);
-                if (msgObj.completed) {
-                    console.log("完成输出")
-                }
-            }
-            chatScrollToBottom(resolve);
-        });
-    }
-
-
-
-    function sendMessage() {
-        stompClient.send("/chat/sendMessage/" + groupId, {}, userInputField.value);
-        userInputField.value = "";
-    }
 </script>
 </body>
 </html>

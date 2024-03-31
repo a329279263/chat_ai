@@ -1,0 +1,84 @@
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    /*margin: 20px;*/
+    padding: 20px;
+    background-color: #f8f8f8;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #333;
+}
+
+p {
+    color: #666;
+}
+
+code {
+    /*background-color: #f4f4f4;*/
+    /*padding: 2px 4px;*/
+    border-radius: 4px;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 90vh;
+}
+
+.chat-container {
+    width: 97%;
+    overflow-y: scroll;
+    flex: 1;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.bottom-message-send {
+    margin: auto;
+    flex-direction: column;
+    display: flex;
+}
+
+.bottom-message-send textarea {
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.message {
+    padding: 10px 20px;
+    margin: 10px 0;
+    border-radius: 5px;
+}
+
+.user-message {
+    background-color: #cce6ff;
+}
+
+.bot-message {
+    background-color: #d9f2d9;
+}
+
+.author {
+    position: fixed;
+    bottom: 20px;
+    right: 40px;
+}
+
+.author a {
+    color: #007bff; /* 使用蓝色作为默认链接颜色 */
+    text-decoration: none; /* 移除默认的下划线 */
+    font-family: 'Arial', sans-serif; /* 设置字体 */
+    transition: color 0.3s; /* 为颜色变化添加动画效果 */
+}
+
+.author a:hover {
+    color: #0056b3; /* 鼠标悬停时的颜色加深 */
+    text-decoration: underline; /* 鼠标悬停时添加下划线 */
+}
+.copy-btn {
+    cursor: pointer;
+}
