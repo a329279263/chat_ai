@@ -37,7 +37,6 @@ public class ChatMessageService {
     public void sendMessageToGroup(Long chatId, String message) throws InterruptedException {
         final ChatMessageRecord userMsg = messageRecordService.createNewMessage(chatId, message);
         messageService.sendOrderedMessage(new ChatMessageResp(chatId, userMsg.getId(), ChatMessageRole.USER, message));
-        Thread.sleep(30);
         messageService.sendOrderedMessage(new ChatMessageResp(chatId, userMsg.getId(), "", true, false));
         chatMessage(userMsg);
     }

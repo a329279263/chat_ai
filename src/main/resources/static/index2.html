@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .chat-container {
+            /*max-width: 800px;*/
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .message {
+            background-color: #f9f9f9;
+            padding: 10px 20px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .user-message {
+            background-color: #cce6ff;
+        }
+
+        .bot-message {
+            background-color: #d9f2d9;
+        }
+
+        textarea {
+            position: absolute;
+            width: 95%;
+            padding: 10px;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="chat-container" id="chat-container">
+    <div class="message bot-message">
+        <p>Hello! How can I help you today?</p>
+    </div>
+</div>
+<!--<input type="text" id="user-input" placeholder="Type your message...">-->
+<textarea cols="100" rows="10" id="user-input">标签一行上的</textarea>
+
+<script>
+    const chatContainer = document.getElementById('chat-container');
+    const userInputField = document.getElementById('user-input');
+
+    function addUserMessage(message) {
+        const userMessage = document.createElement('div');
+        userMessage.classList.add('message', 'user-message');
+        userMessage.innerHTML = message;
+        chatContainer.appendChild(userMessage);
+    }
+
+    function addBotMessage(message) {
+        const botMessage = document.createElement('div');
+        botMessage.classList.add('message', 'bot-message');
+        botMessage.innerHTML = message;
+        chatContainer.appendChild(botMessage);
+    }
+
+    function handleUserInput() {
+        const userInput = userInputField.value;
+        addUserMessage(userInput);
+        // You can add AI response logic here
+        addBotMessage('I am just a basic AI. I do not have the ability to respond to your message.');
+        userInputField.value = '';
+    }
+
+    userInputField.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            handleUserInput();
+        }
+    });
+</script>
+</body>
+</html>

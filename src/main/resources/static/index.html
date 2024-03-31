@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SockJS Example</title>
+    <title>Chat AI</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -14,7 +14,7 @@
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
-            margin: 20px;
+            /*margin: 20px;*/
             padding: 20px;
             background-color: #f8f8f8;
         }
@@ -28,21 +28,86 @@
         }
 
         code {
-            background-color: #f4f4f4;
-            padding: 2px 4px;
+            /*background-color: #f4f4f4;*/
+            /*padding: 2px 4px;*/
             border-radius: 4px;
+        }
+
+        .container{
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+        .chat-container {
+            width: 97%;
+            overflow-y: scroll;
+            flex: 1;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .bottom-message-send{
+            margin: auto;
+            flex-direction: column;
+            display: flex;
+        }
+        .bottom-message-send textarea{
+            border-radius: 10px;
+        }
+
+        .message {
+            padding: 10px 20px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .user-message {
+            background-color: #cce6ff;
+        }
+
+        .bot-message {
+            background-color: #d9f2d9;
+        }
+        .author{
+            position: fixed;
+            bottom: 20px;
+            right: 40px;
+        }
+        .author a {
+            color: #007bff; /* 使用蓝色作为默认链接颜色 */
+            text-decoration: none; /* 移除默认的下划线 */
+            font-family: 'Arial', sans-serif; /* 设置字体 */
+            transition: color 0.3s; /* 为颜色变化添加动画效果 */
+        }
+
+        .author a:hover {
+            color: #0056b3; /* 鼠标悬停时的颜色加深 */
+            text-decoration: underline; /* 鼠标悬停时添加下划线 */
         }
     </style>
 </head>
 <body>
-<input type="text" id="message"/>
-<button onclick="sendMessage()">Send Message</button>
-<!--<ul id="messages"></ul>-->
-<div id="chat">
+<div class="container">
+    <div class="chat-container" id="chat">
 
+    </div>
+    <div class="bottom-message-send">
+        <textarea cols="70" rows="8" id="user-input" placeholder="请输入你的问题..."></textarea>
+        <button onclick="sendMessage()">发送</button>
+    </div>
+    <span class="author"><a href="https://lzh329279263.cn">luozhihui</a></span>
 </div>
 
 <script>
+    const userInputField = document.getElementById('user-input');
+    const chat = document.getElementById('chat');
+    userInputField.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            sendMessage();
+            e.preventDefault();
+        }
+    });
     let groupId="1";
     let token='Bearer admin123';
     $.ajax({
@@ -56,31 +121,45 @@
         }
     });
     // var socket = new SockJS("http://localhost/chat_ai/ws");
-    var socket = new SockJS("/chat_ai/pc/ws");
-    var stompClient = Stomp.over(socket);
+
     let md = markdownit();
     let map = {};
+    var stompClient ;
 
 
-    stompClient.connect({'Authorization': token}, function (frame) {
-        console.log('Connected: ' + frame);
+    function connect() {
+        var socket = new SockJS("/chat_ai/pc/ws");
+        stompClient = Stomp.over(socket);
+        stompClient.connect({'Authorization': token}, function (frame) {
+            console.log('Connected: ' + frame);
 
-        stompClient.subscribe('/topic/' + groupId, function (message) {
-            let msgObj = JSON.parse(message.body);
-            console.warn(msgObj.content)
-            if (msgObj.role === "user") {
-                userQuestion(msgObj);
-            } else {
-                aiAnswer(msgObj);
-            }
+            stompClient.subscribe('/topic/' + groupId, function (message) {
+                let msgObj = JSON.parse(message.body);
+                console.info(msgObj.content)
+                if (msgObj.role === "user") {
+                    userQuestion(msgObj);
+                } else {
+                    aiAnswer(msgObj);
+                }
+            });
         });
-    });
+
+        // 监听连接断开事件
+        socket.onclose = function() {
+            console.log('WebSocket连接已关闭。正在尝试在5秒内重新连接...');
+            setTimeout(connect, 5000); // 5秒后尝试重新连接
+        };
+    }
+    connect();
 
     function userQuestion(msgObj) {
         let div = document.createElement("div");
         div.id = msgObj.msgId
         div.innerHTML = md.render(msgObj.content);
+        div.classList.add('message', 'user-message');
         document.getElementById("chat").appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+
     }
 
     function aiAnswer(msgObj) {
@@ -90,7 +169,8 @@
             let id = "ai" + msgObj.answerMsgId;
             div.id = id;
             div.innerHTML = md.render((msgObj.content));
-            map[id] = msgObj.content
+            div.classList.add('message', 'bot-message');
+            map[id] = msgObj.content;
             // fromDiv.append(div);
             fromDiv.insertAdjacentElement("afterend", div);
         } else {
@@ -99,16 +179,18 @@
             if (!div) return
             map[id] = map[id] + msgObj.content
             div.innerHTML = md.render(map[id]);
-            if (msgObj.Completed) {
-                div.innerHTML = div.innerHTML + "完成输出!!!!!";
+            if (msgObj.completed) {
+                console.log("完成输出")
             }
         }
+        chat.scrollTo({top: chat.scrollHeight,behavior: "smooth"});
     }
 
+
+
     function sendMessage() {
-        var message = document.getElementById("message").value;
-        stompClient.send("/chat/sendMessage/" + groupId, {}, message);
-        document.getElementById("message").value = "";
+        stompClient.send("/chat/sendMessage/" + groupId, {}, userInputField.value);
+        userInputField.value = "";
     }
 </script>
 </body>
