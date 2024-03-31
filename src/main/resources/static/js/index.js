@@ -12,8 +12,8 @@ $.fn.notify = function(message, timeout) {
     // 设置通知的显示位置和动画
     $notify.css({
         'position': 'fixed',
-        'top': '10px',
-        'right': '10px',
+        'top': '50px',
+        'left': '47%',
         'z-index': '1000',
         'background-color': '#333',
         'color': '#fff',
@@ -44,6 +44,7 @@ function copyTextToClipboard(text) {
     // 选择input中的文本
     tempInput.select();
     document.execCommand('copy')
+    $('body').notify('复制成功');
     // 移除临时的input元素
     document.body.removeChild(tempInput);
 }
