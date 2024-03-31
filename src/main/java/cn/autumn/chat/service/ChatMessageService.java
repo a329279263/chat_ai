@@ -46,7 +46,7 @@ public class ChatMessageService {
         final String openid = record.getOpenid();
         final Chat chat = record.getChat();
         final Long chatId = chat.getId();
-        final List<ChatMessage> historyMessage = chat.getHistoryMessage();
+        final List<ChatMessage> historyMessage = chat.getHistoryMessage(10);
         historyMessage.add(new ChatMessage(ChatMessageRole.USER.value(), record.getContent()));
         final long l = System.currentTimeMillis();
         StringBuffer aiResult = new StringBuffer();

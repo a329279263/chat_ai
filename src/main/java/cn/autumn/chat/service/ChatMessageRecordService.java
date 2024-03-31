@@ -1,6 +1,6 @@
 package cn.autumn.chat.service;
 
-import cn.autumn.chat.domain.Chat;
+import cn.autumn.chat.domain.BaseEntity;
 import cn.autumn.chat.domain.ChatMessageRecord;
 import cn.autumn.chat.domain.UserDomainService;
 import com.zhipu.oapi.service.v4.model.ChatMessageRole;
@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -26,7 +27,9 @@ public class ChatMessageRecordService extends UserDomainService<ChatMessageRecor
      * 查询某个会话的聊天记录-10条
      */
     public List<ChatMessageRecord> listByChatId(Long chatId) {
-        return DB.find(ChatMessageRecord.class).where().eq("chat.id", chatId).orderBy("createTime").setMaxRows(10).findList();
+        final List<ChatMessageRecord> createTimeDesc = DB.find(ChatMessageRecord.class).where().eq("chat.id", chatId).orderBy("createTime desc").setMaxRows(10).findList();
+        createTimeDesc.sort(Comparator.comparing(BaseEntity::getCreateTime));
+        return createTimeDesc;
     }
 
     public ChatMessageRecord createNewMessage(Long chatId, String message) {

@@ -33,11 +33,12 @@
             border-radius: 4px;
         }
 
-        .container{
+        .container {
             display: flex;
             flex-direction: column;
             height: 90vh;
         }
+
         .chat-container {
             width: 97%;
             overflow-y: scroll;
@@ -48,13 +49,16 @@
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        .bottom-message-send{
+
+        .bottom-message-send {
             margin: auto;
             flex-direction: column;
             display: flex;
         }
-        .bottom-message-send textarea{
-            border-radius: 10px;
+
+        .bottom-message-send textarea {
+            padding: 10px;
+            border-radius: 5px;
         }
 
         .message {
@@ -62,6 +66,7 @@
             margin: 10px 0;
             border-radius: 5px;
         }
+
         .user-message {
             background-color: #cce6ff;
         }
@@ -69,11 +74,13 @@
         .bot-message {
             background-color: #d9f2d9;
         }
-        .author{
+
+        .author {
             position: fixed;
             bottom: 20px;
             right: 40px;
         }
+
         .author a {
             color: #007bff; /* 使用蓝色作为默认链接颜色 */
             text-decoration: none; /* 移除默认的下划线 */
@@ -108,23 +115,13 @@
             e.preventDefault();
         }
     });
-    let groupId="1";
-    let token='Bearer admin123';
-    $.ajax({
-        url: '/chat_ai/chat/getLatestByCurrentUser',
-        type: 'GET',
-        headers: {
-            'Authorization': token,
-        },
-        success: function(res) {
-            groupId=res.data.id
-        }
-    });
+    let groupId = "1";
+    let token = 'Bearer admin123';
     // var socket = new SockJS("http://localhost/chat_ai/ws");
 
     let md = markdownit();
     let map = {};
-    var stompClient ;
+    var stompClient;
 
 
     function connect() {
@@ -145,45 +142,95 @@
         });
 
         // 监听连接断开事件
-        socket.onclose = function() {
+        socket.onclose = function () {
             console.log('WebSocket连接已关闭。正在尝试在5秒内重新连接...');
             setTimeout(connect, 5000); // 5秒后尝试重新连接
         };
     }
+
     connect();
 
-    function userQuestion(msgObj) {
+    function createMessageElement(msgObj, role) {
         let div = document.createElement("div");
-        div.id = msgObj.msgId
+        div.id = msgObj.msgId;
         div.innerHTML = md.render(msgObj.content);
-        div.classList.add('message', 'user-message');
-        document.getElementById("chat").appendChild(div);
-        chat.scrollTop = chat.scrollHeight;
+        div.classList.add('message', role === "user" ? 'user-message' : 'bot-message');
+        return div;
+    }
 
+    async function renderMessages(messages) {
+        let chatContent = document.createDocumentFragment(); // 用于批量插入DOM
+        for (const item of messages) {
+            item.initialized = true;
+            let messageElement =  createMessageElement(item, item.role);
+            chatContent.appendChild(messageElement);
+
+            // 等待一段时间，但不需要为每次添加元素都滚动
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        // 批量插入所有消息元素
+        chat.appendChild(chatContent);
+
+        // 最后滚动到底部
+        chat.scrollTo({top: chat.scrollHeight, behavior: "smooth"});
+    }
+
+    // 请求处理
+    $.ajax({
+        url: '/chat_ai/chat/getLatestByCurrentUser',
+        type: 'GET',
+        headers: {
+            'Authorization': token,
+        },
+        success: function (res) {
+            let data = res.data;
+            groupId = data.id;
+            renderMessages(data.messageRecordList); // 调用函数
+        }
+    });
+
+    // 平滑滚动到底部
+    function chatScrollToBottom() {
+        // 如果需要，在这里添加平滑滚动逻辑
+        // 注意：这里没有使用resolve，因为我们不在Promise链中
+        chat.scrollTo({top: chat.scrollHeight, behavior: "smooth"});
+    }
+    function userQuestion(msgObj) {
+        return new Promise((resolve) => {
+            let div = document.createElement("div");
+            div.id = msgObj.msgId
+            div.innerHTML = md.render(msgObj.content);
+            div.classList.add('message', 'user-message');
+            document.getElementById("chat").appendChild(div);
+            chatScrollToBottom(resolve);
+        });
     }
 
     function aiAnswer(msgObj) {
-        if (msgObj.initialized) {
-            let fromDiv = document.getElementById(msgObj.answerMsgId);
-            let div = document.createElement("div");
-            let id = "ai" + msgObj.answerMsgId;
-            div.id = id;
-            div.innerHTML = md.render((msgObj.content));
-            div.classList.add('message', 'bot-message');
-            map[id] = msgObj.content;
-            // fromDiv.append(div);
-            fromDiv.insertAdjacentElement("afterend", div);
-        } else {
-            let id = "ai" + msgObj.answerMsgId;
-            let div = document.getElementById(id);
-            if (!div) return
-            map[id] = map[id] + msgObj.content
-            div.innerHTML = md.render(map[id]);
-            if (msgObj.completed) {
-                console.log("完成输出")
+        return new Promise((resolve) => {
+            if (msgObj.initialized) {
+                let fromDiv = document.getElementById(msgObj.answerMsgId);
+                let div = document.createElement("div");
+                let id = "ai" + msgObj.answerMsgId;
+                div.id = id;
+                div.innerHTML = md.render((msgObj.content));
+                div.classList.add('message', 'bot-message');
+                map[id] = msgObj.content;
+                // fromDiv.append(div);
+                fromDiv.insertAdjacentElement("afterend", div);
+            } else {
+                let id = "ai" + msgObj.answerMsgId;
+                let div = document.getElementById(id);
+                if (!div) return
+                map[id] = map[id] + msgObj.content
+                div.innerHTML = md.render(map[id]);
+                if (msgObj.completed) {
+                    console.log("完成输出")
+                }
             }
-        }
-        chat.scrollTo({top: chat.scrollHeight,behavior: "smooth"});
+            chatScrollToBottom(resolve);
+        });
     }
 
 

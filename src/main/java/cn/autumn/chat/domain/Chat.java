@@ -39,11 +39,11 @@ public class Chat extends BaseEntity {
         this.id=id;
     }
 
-    public List<ChatMessage> getHistoryMessage() {
+    public List<ChatMessage> getHistoryMessage(int recentCount) {
         messageRecordList.sort(Comparator.comparing(BaseEntity::getId));
         List<ChatMessage> messageList = new ArrayList<>();
 
-        int startIndex = Math.max(0, messageRecordList.size() - 1);
+        int startIndex = Math.max(0, (messageRecordList.size() - 1)-recentCount);
         int endIndex = messageRecordList.size();
 
         for (int i = startIndex; i < endIndex; i++) {
