@@ -34,7 +34,9 @@
             e.preventDefault();
         }
     });
-    let groupId = "1";
+    let groupId = (function (){
+        return new URLSearchParams(location.search).get("groupId") || 3;
+    })();
     let token = 'Bearer admin123';
     // var socket = new SockJS("http://localhost/chat_ai/ws");
 
