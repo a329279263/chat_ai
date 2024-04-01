@@ -2,8 +2,9 @@ package cn.autumn.chat.service;
 
 import cn.autumn.chat.domain.Chat;
 import cn.autumn.chat.domain.ChatMessageRecord;
-import cn.autumn.chat.domain.UserDomainService;
+import cn.autumn.chat.domain.DomainService;
 import cn.autumn.chat.domain.vo.req.ChatReq;
+import io.ebean.DB;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ import java.util.Optional;
 @Service
 @AllArgsConstructor
 @Slf4j
-public class ChatService extends UserDomainService<Chat> {
+public class ChatService extends DomainService<Chat> {
 
     private final ChatMessageRecordService messageRecordService;
 
@@ -38,6 +39,15 @@ public class ChatService extends UserDomainService<Chat> {
     public Chat createNewChat() {
         Chat chatList = new Chat("新对话");
         chatList.save();
+        return chatList;
+    }
+    /**
+     * 创建新对话
+     */
+    public Chat createNewChat(Long id) {
+        Chat chatList = new Chat("新对话");
+        chatList.setId(id);
+        DB.save(chatList);
         return chatList;
     }
 
@@ -63,5 +73,19 @@ public class ChatService extends UserDomainService<Chat> {
             return chat;
         }
         return createNewChat();
+    }
+
+    /**
+     * 获取某个群聊的最新10条记录
+     */
+    public Chat getLatestById(Long id) {
+        final Optional<Chat> chatOptional = Optional.ofNullable(this.findOne(id));
+        if (chatOptional.isPresent()) {
+            final Chat chat = chatOptional.get();
+            final List<ChatMessageRecord> recordList = messageRecordService.listByChatId(chat.getId());
+            chat.setMessageRecordList(recordList);
+            return chat;
+        }
+        return createNewChat(id);
     }
 }

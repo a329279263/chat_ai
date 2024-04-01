@@ -10,10 +10,7 @@ import cn.hutool.core.bean.BeanUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -39,6 +36,16 @@ public class ChatController {
     public R<ChatLatestResp> getLatestByCurrentUser() {
         final Chat latestByCurrentUser = chatService.getLatestByCurrentUser();
         return R.ok(BeanUtil.copyProperties(latestByCurrentUser, ChatLatestResp.class));
+    }
+
+
+    /**
+     * 根据会话获取最近10条消息
+     */
+    @GetMapping("/getLatestById/{id}")
+    public R<ChatLatestResp> getLatestById(@PathVariable Long id) {
+        final Chat c = chatService.getLatestById(id);
+        return R.ok(BeanUtil.copyProperties(c, ChatLatestResp.class));
     }
 
 

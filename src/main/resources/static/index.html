@@ -12,6 +12,7 @@
     <script src="js/jquery-3.6.0.min.js"></script>
     <script src="js/index.js"></script>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
 </head>
 <body>
 <div class="container">
@@ -37,7 +38,9 @@
     let groupId = (function (){
         return new URLSearchParams(location.search).get("groupId") || 3;
     })();
-    let token = 'Bearer admin123';
+    let token = 'Bearer '+(function (){
+        return new URLSearchParams(location.search).get("username") || "admin123";
+    })();
     // var socket = new SockJS("http://localhost/chat_ai/ws");
 
     let md = markdownit();
@@ -158,7 +161,7 @@
 
     // 请求处理
     $.ajax({
-        url: '/chat_ai/chat/getLatestByCurrentUser',
+        url: '/chat_ai/chat/getLatestById/'+groupId,
         type: 'GET',
         headers: {
             'Authorization': token,
