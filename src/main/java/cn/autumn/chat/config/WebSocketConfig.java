@@ -40,8 +40,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        //一个pc用，一个小程序用
-        registry.addEndpoint("/pc/ws").withSockJS();
+        //一个pc用，一个小程序用 // 根据需要配置允许的源-必须！
+        registry.addEndpoint("/pc/ws")
+                .setAllowedOrigins("https://dev.xcall.cn", "https://lzh329279263.cn/")
+                .withSockJS();
         registry.addEndpoint("/miniapp/ws");
     }
 
