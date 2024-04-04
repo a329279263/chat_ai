@@ -5,6 +5,7 @@ import cn.autumn.chat.service.ChatMessageService;
 import cn.autumn.chat.service.RedissonService;
 import cn.autumn.chat.service.UserService;
 import cn.autumn.chat.thread.ThreadPoolService;
+import cn.hutool.core.util.StrUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,7 @@ public class ChatMessageController {
     @MessageMapping("/sendMessage/{chatId}")
     public void sendMessageToGroup(@DestinationVariable Long chatId, String message, StompHeaderAccessor accessor) {
         final String openid = redissonService.getUserToken(accessor.getSessionId());
+        if (StrUtil.isBlank(message))return;
         ShiroUtils2.setUser(openid);
         userService.checkQaCount();
         ThreadPoolService.getInstance().submitTask(chatId + ":" + openid, openid, "ai生成", () -> {
