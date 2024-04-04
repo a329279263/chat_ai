@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <title>Chat AI</title>
@@ -19,11 +19,11 @@
     <div class="chat-container" id="chat">
 
     </div>
-    <div class="bottom-message-send">
-        <textarea cols="70" rows="8" id="user-input" placeholder="请输入你的问题..."></textarea>
+    <div class="message-area">
+        <textarea cols="70" rows="3" id="user-input" placeholder="请输入你的问题..."></textarea>
         <button onclick="sendMessage()">发送</button>
     </div>
-    <span class="author"><a href="https://lzh329279263.cn">luozhihui</a></span>
+    <span class="author"><a href="https://lzh329279263.cn">lzh</a></span>
 </div>
 
 <script>
@@ -35,6 +35,23 @@
             e.preventDefault();
         }
     });
+    userInputField.addEventListener('input', function () {
+        // 动态调整行数，但不能超过最大行数
+        var currentRows = this.rows;
+        var scrollHeight = this.scrollHeight;
+        var lineHeight = this.clientHeight / currentRows; // 计算行高
+        // 根据内容滚动高度计算需要的行数
+        var newRows = Math.ceil(scrollHeight / lineHeight);
+        // 限制行数在最大行数范围内
+        newRows = Math.min(newRows, 8);
+        // 更新rows属性
+        if (newRows !== currentRows) {
+            this.rows = newRows;
+            chatScrollToBottom(chat);
+        }
+    });
+
+
     let groupId = (function (){
         return new URLSearchParams(location.search).get("groupId") || 3;
     })();
@@ -111,6 +128,7 @@
     function sendMessage() {
         stompClient.send("/chat/sendMessage/" + groupId, {}, userInputField.value);
         userInputField.value = "";
+        userInputField.rows = 3;
     }
 
     function createMessageElement(msgObj) {

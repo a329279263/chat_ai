@@ -2,7 +2,7 @@ body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
     /*margin: 20px;*/
-    padding: 20px;
+    /*padding: 20px;*/
     background-color: #f8f8f8;
 }
 
@@ -23,12 +23,15 @@ code {
 .container {
     display: flex;
     flex-direction: column;
-    height: 90vh;
+    height: 92vh;
 }
 
 .chat-container {
-    width: 97%;
+    overflow-wrap: break-word;
+    display: flex;
+    flex-direction: column;
     overflow-y: scroll;
+    overflow-x: hidden;
     flex: 1;
     margin: 20px auto;
     padding: 20px;
@@ -36,16 +39,39 @@ code {
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-
-.bottom-message-send {
-    margin: auto;
-    flex-direction: column;
-    display: flex;
+@media (max-width: 600px) {
+    .chat-container {
+        width: 85%; /* 在小屏幕上设置为85% */
+    }
 }
 
-.bottom-message-send textarea {
+@media (min-width: 601px) {
+    .chat-container {
+        width: 80%; /* 在大屏幕上设置为80% */
+    }
+}
+
+.message-area {
+    margin: auto;
+    /*flex-direction: column;*/
+    /*display: flex;*/
+    text-align: center;
+}
+
+.message-area textarea {
     padding: 10px;
-    border-radius: 5px;
+    resize: none;
+    width: 100%;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+
+.message-area button {
+    height: 40px;
+    width: 50%;
 }
 
 .message {
@@ -64,8 +90,8 @@ code {
 
 .author {
     position: fixed;
-    bottom: 20px;
-    right: 40px;
+    bottom: 10px;
+    right: 20px;
 }
 
 .author a {
