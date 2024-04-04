@@ -82,11 +82,11 @@ public class AiModelApi {
         }
     }
 
-    public void callModelApi(List<ChatMessage> messages, Consumer<String> consumer, Runnable complete) {
+    public void callModelApi(List<ChatMessage> messages, Consumer<String> consumer, Runnable complete, Runnable errHandle) {
         try {
             chatMessage2(messages, consumer, complete);
         } catch (Exception e) {
-            complete.run();
+            errHandle.run();
             log.error("callModelApi error：", e);
         }
     }

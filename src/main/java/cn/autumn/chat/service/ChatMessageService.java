@@ -58,7 +58,7 @@ public class ChatMessageService {
             userService.qaCountSub(openid);
             messageService.sendOrderedMessage(new ChatMessageResp(chatId, msgId, "", true));
             log.info("ai回答已完成，耗时:{}", System.currentTimeMillis() - l);
-        });
+        }, () -> messageService.sendOrderedMessage(new ChatMessageResp(chatId, msgId, "", true)));
     }
 
 }
