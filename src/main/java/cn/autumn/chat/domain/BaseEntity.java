@@ -49,13 +49,13 @@ public class BaseEntity implements Serializable, ToJson {
     @WhenModified
     @DbComment("更新时间")
     protected Date updateTime;
-
-    /**
-     * 逻辑删除
-     */
-    @SoftDelete
-    @DbComment("逻辑删除")
-    protected boolean deleted;
+//
+//    /**
+//     * 逻辑删除
+//     */
+//    @SoftDelete
+//    @DbComment("逻辑删除")
+//    protected boolean deleted;
 
     /**
      * 备注
@@ -206,9 +206,9 @@ public class BaseEntity implements Serializable, ToJson {
         this.openid = openid;
     }
 
-    public boolean isDeleted() {
-        return deleted;
-    }
+//    public boolean isDeleted() {
+//        return deleted;
+//    }
 
     public Date getCreateTime() {
         return createTime;
