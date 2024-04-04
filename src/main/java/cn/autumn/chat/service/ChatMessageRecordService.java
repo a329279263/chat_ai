@@ -37,4 +37,8 @@ public class ChatMessageRecordService extends UserDomainService<ChatMessageRecor
         this.save(chatMessageRecord);
         return chatMessageRecord;
     }
+
+    public void clearByChatId(Long chatId) {
+        DB.deleteAll(DB.find(ChatMessageRecord.class).where().eq("chat.id", chatId).findList());
+    }
 }

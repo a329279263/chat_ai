@@ -8,10 +8,7 @@ import cn.hutool.core.bean.BeanUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -37,6 +34,15 @@ public class ChatMessageRecordController {
     public R<List<ChatMessageRecordResp>> listByChatId(@RequestParam("chatId") Long chatId) {
         final List<ChatMessageRecord> list = messageRecordService.listByChatId(chatId);
         return R.ok(BeanUtil.copyToList(list, ChatMessageRecordResp.class));
+    }
+
+    /**
+     * 删除某个群聊的记录
+     */
+    @GetMapping("/clearByChatId/{id}")
+    public R<?> clearByChatId(@PathVariable Long id) {
+        messageRecordService.clearByChatId(id);
+        return R.ok("ok");
     }
 
 }

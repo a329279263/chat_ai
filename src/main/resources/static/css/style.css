@@ -93,6 +93,11 @@ code {
     bottom: 10px;
     right: 20px;
 }
+.clear {
+    position: absolute;
+    font-size: 20px;
+    right: 0;
+}
 
 .author a {
     color: #007bff; /* 使用蓝色作为默认链接颜色 */
