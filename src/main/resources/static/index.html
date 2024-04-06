@@ -103,10 +103,10 @@
     }
 
     function aiAnswer(msgObj) {
+        let id = "ai" + msgObj.answerMsgId;
         if (msgObj.initialized) {
             let fromDiv = document.getElementById(msgObj.answerMsgId);
             let div = document.createElement("div");
-            let id = "ai" + msgObj.answerMsgId;
             div.id = id;
             div.innerHTML = md.render((msgObj.content));
             div.classList.add('message', 'bot-message');
@@ -114,13 +114,13 @@
             // fromDiv.append(div);
             fromDiv.insertAdjacentElement("afterend", div);
         } else {
-            let id = "ai" + msgObj.answerMsgId;
             let div = document.getElementById(id);
             if (!div) return
             map[id] = map[id] + msgObj.content
             div.innerHTML = md.render(map[id]);
             if (msgObj.completed) {
                 createCopyBtnForCodeBlocks(div)
+                delete map[id]
                 console.log("完成输出")
             }
         }
@@ -145,9 +145,9 @@
     answerComplete();
     function stopAnswering() {
         answerComplete();
-        const keys = Object.keys(map);
-        const lastKey = keys[keys.length - 1];
-        stompClient.send("/chat/stopAnswering/" + lastKey.split("ai")[1], {});
+        Object.keys(map).forEach((key)=>{
+            stompClient.send("/chat/stopAnswering/" + key.split("ai")[1], {});
+        });
     }
 
     function createMessageElement(msgObj) {
