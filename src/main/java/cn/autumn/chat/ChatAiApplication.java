@@ -1,5 +1,6 @@
 package cn.autumn.chat;
 
+import cn.autumn.chat.thread.ThreadPoolService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -26,6 +27,13 @@ public class ChatAiApplication {
                 System.out.println("\tExternal: \thttp://" + inetAddress.getHostAddress() + ":" + port + path);
             });
         });
+
+        // 初始化 ThreadPoolService
+        ThreadPoolService threadPoolService = ThreadPoolService.getInstance();
+
+        // 注册关闭钩子
+        Runtime.getRuntime().addShutdownHook(new Thread(threadPoolService::shutdownThreadPool));
+
         System.out.println("----------------------------------------------------------");
         System.out.println("(♥◠‿◠)ﾉﾞ  系统启动成功   ლ(´ڡ`ლ)ﾞ  \n");
     }
