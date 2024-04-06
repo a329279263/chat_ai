@@ -121,8 +121,6 @@
             div.innerHTML = md.render(map[id]);
             if (msgObj.completed) {
                 createCopyBtnForCodeBlocks(div)
-                $('#send-button').toggle();
-                $('#stop-button').hide();
                 console.log("完成输出")
             }
         }
@@ -133,10 +131,20 @@
         stompClient.send("/chat/sendMessage/" + groupId, {}, userInputField.value);
         userInputField.value = "";
         userInputField.rows = 3;
-        $('#send-button').hide();
-        $('#stop-button').toggle();
+        answering();
     }
+
+    function answerComplete() {
+        $('#send-button').show();
+        $('#stop-button').hide();
+    }
+    function answering() {
+        $('#send-button').hide();
+        $('#stop-button').show();
+    }
+    answerComplete();
     function stopAnswering() {
+        answerComplete();
         const keys = Object.keys(map);
         const lastKey = keys[keys.length - 1];
         stompClient.send("/chat/stopAnswering/" + lastKey.split("ai")[1], {});
