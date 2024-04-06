@@ -40,14 +40,17 @@ public class Chat extends BaseEntity {
     }
 
     public List<ChatMessage> getHistoryMessage(int recentCount) {
-        messageRecordList.sort(Comparator.comparing(BaseEntity::getId));
+        List<ChatMessageRecord> sortedList = messageRecordList.stream()
+                .filter(ChatMessageRecord::contentNotEmpty)
+                .sorted(Comparator.comparing(BaseEntity::getId)) // 在流上进行排序
+                .toList(); // 将排序后的流收集到一个新的不可变列表中
         List<ChatMessage> messageList = new ArrayList<>();
 
-        int startIndex = Math.max(0, (messageRecordList.size() - 1)-recentCount);
-        int endIndex = messageRecordList.size();
+        int startIndex = Math.max(0, (sortedList.size() - 1)-recentCount);
+        int endIndex = sortedList.size();
 
         for (int i = startIndex; i < endIndex; i++) {
-            ChatMessageRecord record = messageRecordList.get(i);
+            ChatMessageRecord record = sortedList.get(i);
             messageList.add(new ChatMessage(record.getRole(), record.getContent()));
         }
 

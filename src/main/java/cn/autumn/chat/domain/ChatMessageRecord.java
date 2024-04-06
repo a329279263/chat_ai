@@ -1,6 +1,7 @@
 package cn.autumn.chat.domain;
 
 import cn.autumn.chat.constant.Constant;
+import cn.hutool.core.util.StrUtil;
 import com.zhipu.oapi.service.v4.model.ChatMessageRole;
 import io.ebean.DB;
 import io.ebean.annotation.DbComment;
@@ -28,20 +29,29 @@ public class ChatMessageRecord extends BaseEntity {
     @Column(length = 20)
     private String role;
 
+    @OneToOne
+    @DbComment("ai回复的消息id")
+    private ChatMessageRecord answer;
+
+
     @DbComment("内容")
     @Lob
     private String content;
 
-    public ChatMessageRecord(Chat chat, ChatMessageRole role, String content) {
-        this.chat = chat;
-        this.role = role.value();
-        this.content = content;
-    }
 
     public ChatMessageRecord(Long chatId, ChatMessageRole role, String message) {
         this.chat = DB.reference(Chat.class, chatId);
         this.role = role.value();
         this.content = message;
+    }
+    public ChatMessageRecord(Long chatId, ChatMessageRole role, ChatMessageRecord r) {
+        this.chat = DB.reference(Chat.class, chatId);
+        this.role = role.value();
+        this.answer = r;
+    }
+
+    public boolean contentNotEmpty() {
+        return StrUtil.isNotBlank(content);
     }
 
 }

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @descriptions: 群聊消息记录
@@ -33,12 +34,18 @@ public class ChatMessageRecordService extends UserDomainService<ChatMessageRecor
     }
 
     public ChatMessageRecord createNewMessage(Long chatId, String message) {
-        final ChatMessageRecord chatMessageRecord = new ChatMessageRecord(chatId, ChatMessageRole.USER, message);
-        this.save(chatMessageRecord);
-        return chatMessageRecord;
+        final ChatMessageRecord userMsg = new ChatMessageRecord(chatId, ChatMessageRole.USER, message);
+        this.save(userMsg);
+        //保存ai生成的回答
+        this.save(new ChatMessageRecord(chatId, ChatMessageRole.ASSISTANT, userMsg));
+        return userMsg;
     }
 
     public void clearByChatId(Long chatId) {
         DB.deleteAll(DB.find(ChatMessageRecord.class).where().eq("chat.id", chatId).findList());
+    }
+
+    public Optional<ChatMessageRecord> getByAnswerId(Long msgId) {
+        return this.query().where().eq("answer.id", msgId).findOneOrEmpty();
     }
 }

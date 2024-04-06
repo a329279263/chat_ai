@@ -9,7 +9,6 @@ import cn.autumn.chat.security.ShiroUtils2;
 import cn.hutool.core.util.StrUtil;
 import com.zhipu.oapi.service.v4.model.ChatMessage;
 import com.zhipu.oapi.service.v4.model.ChatMessageRole;
-import io.ebean.DB;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -85,7 +84,7 @@ public class ChatMessageService {
     }
 
     private void handleAiCompletion(Long chatId, StringBuffer aiResult, String key, Long msgId) {
-        saveAiMessageResponse(chatId, aiResult.toString());
+        saveAiMessageResponse(aiResult.toString(),msgId);
         stopAnswering(key);
         messageService.sendOrderedMessage(new ChatMessageResp(chatId, msgId, "", true));
         log.info("ai回答已完成");
@@ -95,10 +94,13 @@ public class ChatMessageService {
         messageService.sendOrderedMessage(new ChatMessageResp(chatId, msgId, AI_RESULT_PREFIX, true));
     }
 
-    private void saveAiMessageResponse(Long chatId, String aiResult) {
+    private void saveAiMessageResponse(String aiResult, Long msgId) {
         final String openid = ShiroUtils2.getUser();
         if (StrUtil.isNotBlank(aiResult)) {
-            DB.save(new ChatMessageRecord(chatId, ASSISTANT_ROLE, aiResult));
+            messageRecordService.getByAnswerId(msgId).ifPresent(record -> {
+                record.setContent(aiResult);
+                record.update();
+            });
         }
         userService.qaCountSub(openid);
     }
