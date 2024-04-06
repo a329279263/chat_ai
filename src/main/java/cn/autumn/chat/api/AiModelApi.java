@@ -1,5 +1,6 @@
 package cn.autumn.chat.api;
 
+import cn.autumn.chat.exception.StopAnswerException;
 import cn.autumn.chat.properties.ZhiPuAiProperties;
 import cn.hutool.json.JSONUtil;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -82,9 +83,11 @@ public class AiModelApi {
         }
     }
 
-    public void callModelApi(List<ChatMessage> messages, Consumer<String> consumer, Runnable complete, Runnable errHandle) {
+    public void callModelApi(List<ChatMessage> messages, Consumer<String> consumer, Runnable complete, Runnable errHandle, AnswerContext answerContext) {
         try {
-            chatMessage2(messages, consumer, complete);
+            chatMessage2(messages, consumer, complete,answerContext);
+        } catch (StopAnswerException e) {
+            complete.run();
         } catch (Exception e) {
             errHandle.run();
             log.error("callModelApi error：", e);
@@ -92,15 +95,18 @@ public class AiModelApi {
     }
 
 
-    public void chatMessage2(List<ChatMessage> messages, Consumer<String> consumer, Runnable complete) {
+    public void chatMessage2(List<ChatMessage> messages, Consumer<String> consumer, Runnable complete, AnswerContext answerContext) {
         // 函数调用参数构建部分
         final ChatCompletionRequest chatCompletionRequest = buildChatRequest(messages);
-        ModelApiResponse modelApiResponse = client.invokeModelApi(buildChatRequest(messages));
+        ModelApiResponse modelApiResponse = client.invokeModelApi(chatCompletionRequest);
         if (modelApiResponse.isSuccess()) {
             AtomicBoolean isFirst = new AtomicBoolean(true);
             final ChatMessageAccumulator chatMessageAccumulator = mapStreamToAccumulator(modelApiResponse.getFlowable())
                     .doOnNext(accumulator -> {
                         {
+                            if (answerContext.isStopRequested()) {
+                                throw new StopAnswerException("回答已终止.");
+                            }
                             if (isFirst.getAndSet(false)) {
                                 System.out.print("Response: ");
                             }

@@ -55,4 +55,14 @@ public class ChatMessageController {
         });
     }
 
+    /**
+     * 停止回答
+     */
+    @MessageMapping("/stopAnswering/{msgId}")
+    public void stopAnswering(@DestinationVariable Long msgId, StompHeaderAccessor accessor) {
+        final String openid = redissonService.getUserToken(accessor.getSessionId());
+        ShiroUtils2.setUser(openid);
+        chatMessageService.stopAnswering(openid+msgId);
+    }
+
 }

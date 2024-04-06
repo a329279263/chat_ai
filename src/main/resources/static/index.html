@@ -21,7 +21,8 @@
     </div>
     <div class="message-area">
         <textarea cols="70" rows="3" id="user-input" placeholder="请输入你的问题..."></textarea>
-        <button onclick="sendMessage()">发送</button>
+        <button onclick="sendMessage()" id="send-button">发送</button>
+        <button onclick="stopAnswering()" id="stop-button">停止回答</button>
     </div>
     <span class="author"><a href="https://lzh329279263.cn">lzh</a></span>
     <button onclick="clearMessage()" class="clear" ><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M8 20v-5h2v5h9v-7H5v7h3zm-4-9h16V8h-6V4h-4v4H4v3zM3 21v-8H2V7a1 1 0 0 1 1-1h5V3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v3h5a1 1 0 0 1 1 1v6h-1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path></svg></button>
@@ -120,6 +121,8 @@
             div.innerHTML = md.render(map[id]);
             if (msgObj.completed) {
                 createCopyBtnForCodeBlocks(div)
+                $('#send-button').toggle();
+                $('#stop-button').hide();
                 console.log("完成输出")
             }
         }
@@ -130,6 +133,13 @@
         stompClient.send("/chat/sendMessage/" + groupId, {}, userInputField.value);
         userInputField.value = "";
         userInputField.rows = 3;
+        $('#send-button').hide();
+        $('#stop-button').toggle();
+    }
+    function stopAnswering() {
+        const keys = Object.keys(map);
+        const lastKey = keys[keys.length - 1];
+        stompClient.send("/chat/stopAnswering/" + lastKey.split("ai")[1], {});
     }
 
     function createMessageElement(msgObj) {

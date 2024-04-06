@@ -1,6 +1,7 @@
 package cn.autumn.chat.service;
 
 import cn.autumn.chat.api.AiModelApi;
+import cn.autumn.chat.api.AnswerContext;
 import cn.autumn.chat.domain.Chat;
 import cn.autumn.chat.domain.ChatMessageRecord;
 import cn.autumn.chat.domain.vo.resp.ChatMessageResp;
@@ -12,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @descriptions:
@@ -29,6 +31,22 @@ public class ChatMessageService {
     private final ChatMessageRecordService messageRecordService;
     private final UserService userService;
     private final MessageService messageService;
+
+    private final ConcurrentHashMap<String, AnswerContext> answerContexts = new ConcurrentHashMap<>();
+
+    public void startAnswering(String requestId) {
+        answerContexts.put(requestId, new AnswerContext());
+    }
+
+    /**
+     * 前端手动调用/完成回答后程序调用
+     */
+    public void stopAnswering(String requestId) {
+        AnswerContext context = answerContexts.remove(requestId);
+        if (context != null) {
+            context.requestStop();
+        }
+    }
 
 
     /**
@@ -50,6 +68,8 @@ public class ChatMessageService {
         historyMessage.add(new ChatMessage(ChatMessageRole.USER.value(), record.getContent()));
         final long l = System.currentTimeMillis();
         StringBuffer aiResult = new StringBuffer();
+        final String key = openid + msgId;
+        startAnswering(openid+msgId);
         aiModelApi.callModelApi(historyMessage, resultMsg -> {
             aiResult.append(resultMsg);
             messageService.sendOrderedMessage(new ChatMessageResp(chatId, msgId, resultMsg, false));
@@ -57,8 +77,10 @@ public class ChatMessageService {
             DB.save(new ChatMessageRecord(chat, ChatMessageRole.ASSISTANT, aiResult.toString()));
             userService.qaCountSub(openid);
             messageService.sendOrderedMessage(new ChatMessageResp(chatId, msgId, "", true));
+            //内容回答完成后调用停止回答，用于资源释放
+            stopAnswering(key);
             log.info("ai回答已完成，耗时:{}", System.currentTimeMillis() - l);
-        }, () -> messageService.sendOrderedMessage(new ChatMessageResp(chatId, msgId, "", true)));
+        }, () -> messageService.sendOrderedMessage(new ChatMessageResp(chatId, msgId, "", true)),answerContexts.get(key));
     }
 
 }
