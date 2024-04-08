@@ -121,6 +121,7 @@
             if (msgObj.completed) {
                 createCopyBtnForCodeBlocks(div)
                 delete map[id]
+                answerComplete();
                 console.log("完成输出")
             }
         }
