@@ -43,18 +43,24 @@ code {
     .chat-container {
         width: 85%; /* 在小屏幕上设置为85% */
     }
+    .message-area {
+        width: 85%;
+    }
 }
 
 @media (min-width: 601px) {
     .chat-container {
         width: 80%; /* 在大屏幕上设置为80% */
     }
+    .message-area {
+        width: 50%;
+    }
 }
 
 .message-area {
     margin: auto;
-    /*flex-direction: column;*/
-    /*display: flex;*/
+    flex-direction: column;
+    display: flex;
     text-align: center;
 }
 
@@ -71,7 +77,6 @@ code {
 
 .message-area button {
     height: 40px;
-    width: 50%;
 }
 
 .message {
