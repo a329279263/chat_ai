@@ -1,6 +1,7 @@
 package cn.autumn.chat.service;
 
 import cn.autumn.chat.domain.vo.resp.ChatMessageResp;
+import cn.autumn.chat.domain.vo.resp.LocalChatMessageResp;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,19 @@ public class MessageService {
     }
 
     public void sendOrderedMessage(ChatMessageResp result) {
+        //将发送消息任务放入队列
+        sendQueue.add(() -> {
+            // 打印出来消息队列就正常，不打印日志则乱序？
+//            log.info("广播消息：【" + result.getContent() + "】");
+            try {
+                Thread.sleep(30);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            messagingTemplate.convertAndSend("/topic/" + result.getChatId(), result);
+        });
+    }
+    public void sendOrderedMessage(LocalChatMessageResp result) {
         //将发送消息任务放入队列
         sendQueue.add(() -> {
             // 打印出来消息队列就正常，不打印日志则乱序？

@@ -24,11 +24,44 @@
         <button onclick="sendMessage()" id="send-button">发送</button>
         <button onclick="stopAnswering()" id="stop-button">停止回答</button>
     </div>
-    <span class="author"><a href="https://lzh329279263.cn">lzh</a></span>
+    <span class="author"><a href="https://lzh329279263.cn/home">lzh</a></span>
     <button onclick="clearMessage()" class="clear" ><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M8 20v-5h2v5h9v-7H5v7h3zm-4-9h16V8h-6V4h-4v4H4v3zM3 21v-8H2V7a1 1 0 0 1 1-1h5V3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v3h5a1 1 0 0 1 1 1v6h-1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path></svg></button>
 </div>
 
 <script>
+    const GROUP_KEY = "group_id";
+    const HISTORY_KEY = "history_list";
+    const SYSTEM_PROMPT = "system_prompt";
+
+    // 获取查询参数
+    const getQueryParam = (key) => new URLSearchParams(location.search).get(key);
+
+
+    // 检查是否为本地模式
+    const isLocalMode = () => !getQueryParam("groupId");
+
+    // 获取组ID
+    const groupId = isLocalMode()? localStorage.getItem(GROUP_KEY) || generateUniqueID(): getQueryParam("groupId");
+
+    // 存储组ID
+    localStorage.setItem(GROUP_KEY, groupId);
+
+    // 获取令牌
+    const token = `Bearer ${isLocalMode()? groupId: getQueryParam("username") || "admin123"}`;
+
+    // 创建一个函数来生成基础路径
+    function getBasePath() {
+        return `/chat${isLocalMode() ? '/local' : ''}`;
+    }
+
+    // 使用该函数来定义发送消息和停止回答的路径
+    const sendMessagePath = `${getBasePath()}/sendMessage/`;
+    const sendStopPath = `${getBasePath()}/stopAnswering/`;
+
+    let md = markdownit();
+    let map = {};
+    var stompClient;
+
     const userInputField = document.getElementById('user-input');
     const chat = document.getElementById('chat');
     userInputField.addEventListener('keydown', function (e) {
@@ -52,20 +85,6 @@
             chatScrollToBottom(chat);
         }
     });
-
-
-    let groupId = (function (){
-        return new URLSearchParams(location.search).get("groupId") || 3;
-    })();
-    let token = 'Bearer '+(function (){
-        return new URLSearchParams(location.search).get("username") || "admin123";
-    })();
-    // var socket = new SockJS("http://localhost/chat_ai/ws");
-
-    let md = markdownit();
-    let map = {};
-    var stompClient;
-
 
     function connect() {
         var socket = new SockJS("/chat_ai/pc/ws");
@@ -119,20 +138,36 @@
             map[id] = map[id] + msgObj.content
             div.innerHTML = md.render(map[id]);
             if (msgObj.completed) {
-                createCopyBtnForCodeBlocks(div)
-                delete map[id]
-                answerComplete();
-                console.log("完成输出")
+                aiAnswerComplete(div,id);
             }
         }
         chatScrollToBottom(chat);
     }
 
     function sendMessage() {
-        stompClient.send("/chat/sendMessage/" + groupId, {}, userInputField.value);
+        let message = isLocalMode()?addMessageList({"role":"user","content":userInputField.value}):userInputField.value;
+        stompClient.send(sendMessagePath + groupId, {}, message);
         userInputField.value = "";
         userInputField.rows = 3;
         answering();
+    }
+
+    function aiAnswerComplete(div,id) {
+        createCopyBtnForCodeBlocks(div)
+        isLocalMode() && addMessageList({"role":"assistant","content":map[id]});
+        delete map[id]
+        answerComplete();
+        console.log("完成输出!")
+    }
+    function addMessageList(obj) {
+        let history = getMessageList();
+        history.push(obj)
+        let result = JSON.stringify(history)
+        localStorage.setItem(HISTORY_KEY,result)
+        return result;
+    }
+    function getMessageList() {
+        return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
     }
 
     function answerComplete() {
@@ -147,7 +182,7 @@
     function stopAnswering() {
         answerComplete();
         Object.keys(map).forEach((key)=>{
-            stompClient.send("/chat/stopAnswering/" + key.split("ai")[1], {});
+            stompClient.send(sendStopPath + key.split("ai")[1], {});
         });
     }
 
@@ -198,22 +233,27 @@
 
 
     function clearMessage() {
-        $.ajax({
+        isLocalMode() && clearChatMessage();
+        !isLocalMode() && $.ajax({
             url: '/chat_ai/message/clearByChatId/'+groupId,
             type: 'GET',
             headers: {
                 'Authorization': token,
             },
             success: function () {
-                chat.innerHTML="";
-                $('body').notify('消息已清空');
+                clearChatMessage()
             }
         });
     }
+    function clearChatMessage() {
+        localStorage.removeItem(HISTORY_KEY);
+        chat.innerHTML="";
+        $('body').notify('消息已清空');
+    }
 
-
+    isLocalMode() && renderMessages(getMessageList());
     // 请求处理
-    $.ajax({
+    !isLocalMode() && $.ajax({
         url: '/chat_ai/chat/getLatestById/'+groupId,
         type: 'GET',
         headers: {
@@ -221,7 +261,6 @@
         },
         success: function (res) {
             let data = res.data;
-            groupId = data.id;
             renderMessages(data.messageRecordList); // 调用函数
         }
     });
