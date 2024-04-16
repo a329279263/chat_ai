@@ -13,23 +13,22 @@
 - 后端框架：Spring Boot
 - 开发工具：IntelliJ IDEA
 - 版本控制：Git
-- 微信小程序支付
 - 智普ai
 
 
 ## 快速启动
 
 
-1. 启动 redis<s>、mysql，并且创建一个空白数据库如：chat_ai。<s>
+1. 启动 redis<s>、mysql，并且创建一个空白数据库如：chat_ai。</s>
 
 
 2. 配置文件`src/main/resources/application.yaml`。
 
  
-3. <s>需要ebean插件，Intellij idea安装插件后，菜单找到 build -> Ebean Enhancer，即可对实体类进行增强。<s>
+3. <s>需要ebean插件，Intellij idea安装插件后，菜单找到 build -> Ebean Enhancer，即可对实体类进行增强。</s>
 
 
-4. <s>运行 `src/test/DBTest.java`，会自动创建数据库和表（如存在会清空数据）。<s>
+4. <s>运行 `src/test/DBTest.java`，会自动创建数据库和表（如存在会清空数据）。</s>
 
 
 5. 启动项目
@@ -67,5 +66,5 @@
 
 【简要介绍项目的主要功能模块】
 
-1纯ai聊天模块
+1. 本地ai对话模块
 
