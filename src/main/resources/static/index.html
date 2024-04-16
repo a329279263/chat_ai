@@ -24,11 +24,17 @@
         <button onclick="sendMessage()" id="send-button">发送</button>
         <button onclick="stopAnswering()" id="stop-button">停止回答</button>
     </div>
-    <span class="author"><a href="https://lzh329279263.cn">lzh</a></span>
+    <span class="author"><a href="https://lzh329279263.cn/home">lzh</a></span>
     <button onclick="clearMessage()" class="clear" ><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M8 20v-5h2v5h9v-7H5v7h3zm-4-9h16V8h-6V4h-4v4H4v3zM3 21v-8H2V7a1 1 0 0 1 1-1h5V3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v3h5a1 1 0 0 1 1 1v6h-1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path></svg></button>
 </div>
 
 <script>
+    const GROUP_KEY="group_id";
+    const HISTORY_KEY="history_list";
+    //自定义场景
+    const SYSTEM_PROMPT="system_prompt";
+
+
     const userInputField = document.getElementById('user-input');
     const chat = document.getElementById('chat');
     userInputField.addEventListener('keydown', function (e) {
@@ -55,12 +61,10 @@
 
 
     let groupId = (function (){
-        return new URLSearchParams(location.search).get("groupId") || 3;
+        return localStorage.getItem(GROUP_KEY) || generateUniqueID();
     })();
-    let token = 'Bearer '+(function (){
-        return new URLSearchParams(location.search).get("username") || "admin123";
-    })();
-    // var socket = new SockJS("http://localhost/chat_ai/ws");
+    localStorage.setItem(GROUP_KEY, groupId)
+    let token = 'Bearer '+groupId;
 
     let md = markdownit();
     let map = {};
@@ -72,7 +76,6 @@
         stompClient = Stomp.over(socket);
         stompClient.connect({'Authorization': token}, function (frame) {
             console.log('Connected: ' + frame);
-
             stompClient.subscribe('/topic/' + groupId, function (message) {
                 let msgObj = JSON.parse(message.body);
                 console.info(msgObj.content)
@@ -119,22 +122,37 @@
             map[id] = map[id] + msgObj.content
             div.innerHTML = md.render(map[id]);
             if (msgObj.completed) {
-                createCopyBtnForCodeBlocks(div)
-                delete map[id]
-                answerComplete();
-                console.log("完成输出")
+                aiAnswerComplete(div,id);
             }
         }
         chatScrollToBottom(chat);
     }
 
     function sendMessage() {
-        stompClient.send("/chat/sendMessage/" + groupId, {}, userInputField.value);
+        let message = addMessageList({"role":"user","content":userInputField.value});
+        stompClient.send("/chat/sendMessage/" + groupId, {}, message);
         userInputField.value = "";
         userInputField.rows = 3;
         answering();
     }
 
+    function aiAnswerComplete(div,id) {
+        createCopyBtnForCodeBlocks(div)
+        addMessageList({"role":"assistant","content":map[id]});
+        delete map[id]
+        answerComplete();
+        console.log("完成输出!")
+    }
+    function addMessageList(obj) {
+        let history = getMessageList();
+        history.push(obj)
+        let result = JSON.stringify(history)
+        localStorage.setItem(HISTORY_KEY,result)
+        return result;
+    }
+    function getMessageList() {
+        return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+    }
     function answerComplete() {
         $('#send-button').show();
         $('#stop-button').hide();
@@ -196,35 +214,13 @@
         chatScrollToBottom(chat);
     }
 
+    renderMessages(getMessageList());
 
     function clearMessage() {
-        $.ajax({
-            url: '/chat_ai/message/clearByChatId/'+groupId,
-            type: 'GET',
-            headers: {
-                'Authorization': token,
-            },
-            success: function () {
-                chat.innerHTML="";
-                $('body').notify('消息已清空');
-            }
-        });
+        localStorage.removeItem(HISTORY_KEY);
+        chat.innerHTML="";
+        $('body').notify('消息已清空');
     }
-
-
-    // 请求处理
-    $.ajax({
-        url: '/chat_ai/chat/getLatestById/'+groupId,
-        type: 'GET',
-        headers: {
-            'Authorization': token,
-        },
-        success: function (res) {
-            let data = res.data;
-            groupId = data.id;
-            renderMessages(data.messageRecordList); // 调用函数
-        }
-    });
 
 </script>
 </body>

@@ -53,3 +53,10 @@ function isCodeBlock(codeElement) {
     // 检查code标签是否有换行符，如果是，则认为是代码块
     return codeElement.textContent.includes('\n');
 }
+
+
+function generateUniqueID() {
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 15);
+    return `${timestamp}-${randomString}`;
+}

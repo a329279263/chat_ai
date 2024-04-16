@@ -1,13 +1,12 @@
 package cn.autumn.chat.exception;
 
-import cn.autumn.chat.domain.vo.R;
+import cn.autumn.chat.vo.R;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.websocket.AuthenticationException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import javax.persistence.OptimisticLockException;
 import java.nio.file.AccessDeniedException;
 
 /**
@@ -51,15 +50,6 @@ public class GlobalExceptionHandler {
     public R<Void> authenticationException(AuthenticationException e) {
         log.error("身份验证失败:", e);
         return R.fail(e.getMessage());
-    }
-
-    /**
-     * 最优锁异常
-     */
-    @ExceptionHandler(OptimisticLockException.class)
-    public R<Void> handleOptimisticLockException(OptimisticLockException e) {
-        log.error("最优锁异常:", e);
-        return R.fail("操作过于频繁，请稍后再试。");
     }
 
     /**

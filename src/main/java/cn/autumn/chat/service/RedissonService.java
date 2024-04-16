@@ -10,8 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static cn.autumn.chat.constant.Constant.INCREMENT_IP_COUNT_PREFIX;
-import static cn.autumn.chat.constant.Constant.INCREMENT_USER_COUNT_PREFIX;
+import static cn.autumn.chat.constant.Constant.*;
 
 /**
  * @descriptions:
@@ -42,6 +41,14 @@ public class RedissonService {
         long count = counter.incrementAndGet();
 
         return (int) count;
+    }
+
+
+    public long incrementUserIdCount(String userId) {
+        RAtomicLong counter = requestCounters.computeIfAbsent(userId, key -> redissonClient.getAtomicLong(USER_ID_SORT_COUNTER + key));
+        // 自增计数器并获取自增后的值
+
+        return counter.incrementAndGet();
     }
 
     public void clearCounters() {

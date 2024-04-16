@@ -2,11 +2,8 @@ package cn.autumn.chat.service;
 
 import cn.autumn.chat.api.AiModelApi;
 import cn.autumn.chat.api.AnswerContext;
-import cn.autumn.chat.domain.Chat;
-import cn.autumn.chat.domain.ChatMessageRecord;
-import cn.autumn.chat.domain.vo.resp.ChatMessageResp;
 import cn.autumn.chat.security.ShiroUtils2;
-import cn.hutool.core.util.StrUtil;
+import cn.autumn.chat.vo.resp.ChatMessageResp;
 import com.zhipu.oapi.service.v4.model.ChatMessage;
 import com.zhipu.oapi.service.v4.model.ChatMessageRole;
 import lombok.AllArgsConstructor;
@@ -35,8 +32,7 @@ public class ChatMessageService {
 
 
     private final AiModelApi aiModelApi;
-    private final ChatMessageRecordService messageRecordService;
-    private final UserService userService;
+    private final RedissonService redissonService;
     private final MessageService messageService;
     private final ConcurrentHashMap<String, AnswerContext> answerContexts = new ConcurrentHashMap<>();
 
@@ -52,57 +48,40 @@ public class ChatMessageService {
                 .ifPresent(AnswerContext::requestStop);
     }
 
-    public void sendMessageToGroup(Long chatId, String message) throws InterruptedException {
-        final ChatMessageRecord userMsg = messageRecordService.createNewMessage(chatId, message);
-        sendUserMessage(chatId, userMsg);
-        processAiResponse(chatId, userMsg);
+    public void sendMessageToGroup(String chatId, List<ChatMessage> list) {
+        final long i = redissonService.incrementUserIdCount(ShiroUtils2.getUser());
+        final ChatMessage last = list.getLast();
+        sendUserMessage(chatId, (String) last.getContent(),i);
+        processAiResponse(chatId,  list,i);
     }
 
-    private void sendUserMessage(Long chatId, ChatMessageRecord userMsg) {
-        messageService.sendOrderedMessage(new ChatMessageResp(chatId, userMsg.getId(), ChatMessageRole.USER, userMsg.getContent()));
-        messageService.sendOrderedMessage(new ChatMessageResp(chatId, userMsg.getId(), "", true, false));
-
+    private void sendUserMessage(String chatId, String message, long msgId) {
+        messageService.sendOrderedMessage(new ChatMessageResp(chatId, msgId, ChatMessageRole.USER, message));
+        messageService.sendOrderedMessage(new ChatMessageResp(chatId, msgId, "", true, false));
     }
 
-    private void processAiResponse(Long chatId, ChatMessageRecord userMsg) {
-        String key = userMsg.getOpenid() + userMsg.getId();
-        Long msgId = userMsg.getId();
+    private void processAiResponse(String chatId, List<ChatMessage> list, long msgId) {
+        String key = ShiroUtils2.getUser() + msgId;
         StringBuffer aiResult = new StringBuffer();
         startAnswering(key);
-        List<ChatMessage> historyMessage = getHistoryMessage(userMsg.getChat());
-        aiModelApi.callModelApi(historyMessage, resultMsg -> handleAiResult(chatId, msgId, resultMsg,aiResult),
+        aiModelApi.callModelApi(list, resultMsg -> handleAiResult(chatId, msgId, resultMsg,aiResult),
                 () -> handleAiCompletion(chatId, aiResult,key,msgId), () -> handleAiError(chatId, msgId), answerContexts.get(key));
     }
 
-    private List<ChatMessage> getHistoryMessage(Chat chat) {
-        return chat.getHistoryMessage(HISTORY_MESSAGE_LIMIT);
-    }
-
-    private void handleAiResult(Long chatId, Long msgId, String resultMsg, StringBuffer aiResult) {
+    private void handleAiResult(String chatId, Long msgId, String resultMsg, StringBuffer aiResult) {
         aiResult.append(resultMsg);
         messageService.sendOrderedMessage(new ChatMessageResp(chatId, msgId, resultMsg, false));
     }
 
-    private void handleAiCompletion(Long chatId, StringBuffer aiResult, String key, Long msgId) {
-        saveAiMessageResponse(aiResult.toString(),msgId);
+    private void handleAiCompletion(String chatId, StringBuffer aiResult, String key, Long msgId) {
         stopAnswering(key);
         messageService.sendOrderedMessage(new ChatMessageResp(chatId, msgId, "", true));
         log.info("ai回答已完成");
     }
 
-    private void handleAiError(Long chatId, Long msgId) {
+    private void handleAiError(String chatId, Long msgId) {
         messageService.sendOrderedMessage(new ChatMessageResp(chatId, msgId, AI_RESULT_PREFIX, true));
     }
 
-    private void saveAiMessageResponse(String aiResult, Long msgId) {
-        final String openid = ShiroUtils2.getUser();
-        if (StrUtil.isNotBlank(aiResult)) {
-            messageRecordService.getByAnswerId(msgId).ifPresent(record -> {
-                record.setContent(aiResult);
-                record.update();
-            });
-        }
-        userService.qaCountSub(openid);
-    }
 
 }

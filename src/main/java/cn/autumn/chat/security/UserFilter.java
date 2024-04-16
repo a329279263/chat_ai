@@ -1,8 +1,8 @@
 package cn.autumn.chat.security;
 
 import cn.autumn.chat.constant.Constant;
-import cn.autumn.chat.domain.vo.R;
 import cn.autumn.chat.util.PathMathUtil;
+import cn.autumn.chat.vo.R;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

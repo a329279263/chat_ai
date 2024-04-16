@@ -24,6 +24,7 @@ public class Constant {
      */
     public static final String INCREMENT_USER_COUNT_PREFIX = "user_request_counter:";
     public static final String INCREMENT_IP_COUNT_PREFIX = "ip_request_counter:";
+    public static final String USER_ID_SORT_COUNTER = "user_id_sort_counter:";
     public static final int MAX_USER_REQUEST_COUNT = 1000;
     public static final int MAX_IP_REQUEST_COUNT = 3000;
 

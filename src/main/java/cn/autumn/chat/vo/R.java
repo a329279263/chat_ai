@@ -1,4 +1,4 @@
-package cn.autumn.chat.domain.vo;
+package cn.autumn.chat.vo;
 
 
 import cn.autumn.chat.constant.HttpStatus;

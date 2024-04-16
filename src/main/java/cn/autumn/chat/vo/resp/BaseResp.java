@@ -1,4 +1,4 @@
-package cn.autumn.chat.domain.vo.resp;
+package cn.autumn.chat.vo.resp;
 
 import lombok.Data;
 

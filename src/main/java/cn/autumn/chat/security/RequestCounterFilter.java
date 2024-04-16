@@ -1,10 +1,10 @@
 package cn.autumn.chat.security;
 
 import cn.autumn.chat.constant.Constant;
-import cn.autumn.chat.domain.vo.R;
 import cn.autumn.chat.service.RedissonService;
 import cn.autumn.chat.util.IpUtil;
 import cn.autumn.chat.util.PathMathUtil;
+import cn.autumn.chat.vo.R;
 import cn.hutool.core.util.StrUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

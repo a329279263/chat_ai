@@ -1,4 +1,4 @@
-package cn.autumn.chat.domain.vo.resp;
+package cn.autumn.chat.vo.resp;
 
 import com.zhipu.oapi.service.v4.model.ChatMessageRole;
 import lombok.Data;
@@ -16,7 +16,7 @@ public class ChatMessageResp {
     /**
      * 会话/分组id
      */
-    private Long chatId;
+    private String chatId;
 
     /**
      * 消息id，只有用户发送才有
@@ -47,7 +47,7 @@ public class ChatMessageResp {
     private Boolean completed = false;
 
 
-    public ChatMessageResp(Long chatId, Long msgId, ChatMessageRole role, String content) {
+    public ChatMessageResp(String chatId, Long msgId, ChatMessageRole role, String content) {
         this.chatId = chatId;
         if (role == ChatMessageRole.USER) {
             this.msgId = msgId;
@@ -59,7 +59,7 @@ public class ChatMessageResp {
         this.completed = true;
     }
 
-    public ChatMessageResp(Long chatId, Long answerMsgId, String content, Boolean completed) {
+    public ChatMessageResp(String chatId, Long answerMsgId, String content, Boolean completed) {
         this.chatId = chatId;
         this.answerMsgId = answerMsgId;
         this.role = ChatMessageRole.ASSISTANT.value();
@@ -67,7 +67,7 @@ public class ChatMessageResp {
         this.completed = completed;
     }
 
-    public ChatMessageResp(Long chatId, Long answerMsgId, String content, Boolean initialized, Boolean completed) {
+    public ChatMessageResp(String chatId, Long answerMsgId, String content, Boolean initialized, Boolean completed) {
         this.chatId = chatId;
         this.answerMsgId = answerMsgId;
         this.role = ChatMessageRole.ASSISTANT.value();

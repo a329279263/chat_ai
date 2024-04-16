@@ -1,6 +1,6 @@
 package cn.autumn.chat.service;
 
-import cn.autumn.chat.domain.vo.resp.ChatMessageResp;
+import cn.autumn.chat.vo.resp.ChatMessageResp;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
