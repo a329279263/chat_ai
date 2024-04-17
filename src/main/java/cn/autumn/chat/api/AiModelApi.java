@@ -2,6 +2,7 @@ package cn.autumn.chat.api;
 
 import cn.autumn.chat.exception.StopAnswerException;
 import cn.autumn.chat.properties.ZhiPuAiProperties;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -144,10 +145,11 @@ public class AiModelApi {
     }
 
     private ChatCompletionRequest buildChatRequest(List<ChatMessage> messages) {
+        final List<ChatMessage> list = messages.stream().filter(m -> StrUtil.isNotBlank(m.getContent().toString())).toList();
         return ChatCompletionRequest.builder()
                 .model(Constants.ModelChatGLM4)
                 .stream(Boolean.TRUE)
-                .messages(messages)
+                .messages(list)
                 .requestId(createRequestId())
                 .toolChoice("auto")
                 .build();

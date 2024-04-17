@@ -145,6 +145,7 @@
     }
 
     function sendMessage() {
+        if (!userInputField.value)return;
         let message = isLocalMode()?addMessageList({"role":"user","content":userInputField.value}):userInputField.value;
         stompClient.send(sendMessagePath + groupId, {}, message);
         userInputField.value = "";
