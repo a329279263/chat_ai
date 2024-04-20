@@ -60,7 +60,7 @@ chat_ai/
 
 6. 跨域问题通过 nginx 解决，配置如下
 ```nginx
-		location /chat_ai_index {
+		location /chatAi {
 		   alias		D:/Project/99/chat_ai/src/main/resources/static/;
 		   index       index.html index.htm;
 		}
@@ -95,7 +95,7 @@ chat_ai/
 		}
 ```
 
-7. 访问项目地址：http://localhost/ai_index/index.html
+7. 访问项目地址：http://localhost/chatAi/index.html
 
 ## 功能模块
 

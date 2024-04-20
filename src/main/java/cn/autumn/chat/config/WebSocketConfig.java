@@ -17,6 +17,7 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 
 /**
  * @descriptions:
@@ -45,6 +46,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .setAllowedOrigins("https://dev.xcall.cn", "https://lzh329279263.cn/")
                 .withSockJS();
         registry.addEndpoint("/miniapp/ws");
+    }
+
+    @Override
+    public void configureWebSocketTransport(WebSocketTransportRegistration registry) {
+        registry.setMessageSizeLimit(1024 * 1024); // 设置最大传输单元为1MB
     }
 
     @Override
