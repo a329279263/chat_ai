@@ -44,7 +44,7 @@ public class ChatMessageController {
         final String openid = redissonService.getUserToken(accessor.getSessionId());
         if (StrUtil.isBlank(message))return;
         ShiroUtils2.setUser(openid);
-        userService.checkQaCount();
+//        userService.checkQaCount();
         ThreadPoolService.getInstance().submitTask(chatId + ":" + openid, openid, "ai生成", () -> {
             ShiroUtils2.setUser(openid);
             try {

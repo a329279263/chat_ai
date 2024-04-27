@@ -102,7 +102,7 @@ public class ChatMessageService {
                 record.update();
             });
         }
-        userService.qaCountSub(openid);
+//        userService.qaCountSub(openid);
     }
 
 }
