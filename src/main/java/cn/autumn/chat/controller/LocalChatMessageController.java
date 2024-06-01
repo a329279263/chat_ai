@@ -3,7 +3,6 @@ package cn.autumn.chat.controller;
 import cn.autumn.chat.security.ShiroUtils2;
 import cn.autumn.chat.service.LocalChatMessageService;
 import cn.autumn.chat.service.RedissonService;
-import cn.autumn.chat.service.UserService;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.zhipu.oapi.service.v4.model.ChatMessage;
@@ -12,7 +11,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,10 +31,8 @@ public class LocalChatMessageController {
     private final LocalChatMessageService chatMessageService;
 
 
-    private final SimpMessagingTemplate messagingTemplate;
 
     private final RedissonService redissonService;
-    private final UserService userService;
 
     /**
      * 接收客户端消息

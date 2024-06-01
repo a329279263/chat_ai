@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+<script src="js/jquery-3.6.0.min.js"></script>
+
+<script>
+    // 通过POST请求初始化订阅
+    const subId = 'your_sub_id'; // 替换为实际的订阅ID
+    const eventSource = new EventSource(`/chat_ai/sse/sendMessage?subId=${encodeURIComponent(subId)}`, { withCredentials: true });
+
+    // 监听服务器发送的消息
+    eventSource.onmessage = (event) => {
+        console.log('New message from server:', event.data);
+    };
+
+    // 监听连接错误
+    eventSource.onerror = (error) => {
+        console.error('EventSource failed:', error);
+        eventSource.close();
+    };
+
+</script>
+</html>

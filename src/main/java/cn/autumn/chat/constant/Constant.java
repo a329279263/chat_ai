@@ -51,6 +51,7 @@ public class Constant {
             "/wx/user/login",
             "/chat_ai/miniapp/ws/**",// WebSocket 鉴权请查看 WebSocketInterceptor
             "/chat_ai/pc/ws/**",
+            "/sse/**",
     };
 
 
