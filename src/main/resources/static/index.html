@@ -98,39 +98,16 @@
         });
     })()
 
-    let reconnectInterval = 1000; // 重连间隔（毫秒）
-    let reconnectAttempts = 0; // 重试次数
+    // 创建 EventSource 实例
+    const eventSource = new EventSource(`/chat_ai/message/subscribeNotice?groupId=${groupId}&subId=${username}`);
 
-    function connect() {
-        // 创建 EventSource 实例
-        const eventSource = new EventSource(`/chat_ai/message/subscribeNotice?groupId=${groupId}&subId=${username}`);
-
-        // 监听服务器发送的消息
-        eventSource.onmessage = (event) => {
-            console.log('New message from server:', event.data);
-            reconnectAttempts = 0; // 重置重试次数
-            chat.innerHTML="";
-            $('body').notify('消息已被清空');
-        };
-
-        // 监听错误
-        eventSource.onerror = (event) => {
-            console.log('Connection failed:', event);
-            // 断开连接
-            eventSource.close();
-            // 使用指数退避算法来决定下一次重试的间隔
-            reconnectInterval = Math.min(reconnectInterval * 2, 30000); // 最大重试间隔设置为30秒
-            // 增加重试次数
-            reconnectAttempts++;
-
-            // 尝试重新连接
-            setTimeout(() => {
-                connect();
-            }, reconnectInterval);
-        };
-    }
-    // 初始化连接
-    connect();
+    // 监听服务器发送的消息
+    eventSource.onmessage = (event) => {
+        console.log('New message from server:', event.data);
+        reconnectAttempts = 0; // 重置重试次数
+        chat.innerHTML="";
+        $('body').notify('消息已被清空');
+    };
 
 </script>
 </body>
