@@ -45,10 +45,8 @@ public class RedissonService {
 
 
     public long incrementUserIdCount(String userId) {
-        RAtomicLong counter = requestCounters.computeIfAbsent(userId, key -> redissonClient.getAtomicLong(USER_ID_SORT_COUNTER + key));
-        // 自增计数器并获取自增后的值
-
-        return counter.incrementAndGet();
+        final RAtomicLong atomicLong = redissonClient.getAtomicLong(USER_ID_SORT_COUNTER + userId);
+        return atomicLong.incrementAndGet();
     }
 
     public void clearCounters() {
