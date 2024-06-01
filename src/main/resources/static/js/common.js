@@ -29,7 +29,9 @@ $.fn.notify = function(message, timeout) {
         }, timeout);
     });
 };
-
+$.notify=function(message, timeout) {
+    $('body').notify(message, timeout);
+};
 // 平滑滚动到底部
 function chatScrollToBottom(chat) {
     // 如果需要，在这里添加平滑滚动逻辑

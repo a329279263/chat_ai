@@ -1,8 +1,11 @@
 package cn.autumn.chat.service;
 
 import cn.autumn.chat.domain.BaseEntity;
+import cn.autumn.chat.domain.Chat;
 import cn.autumn.chat.domain.ChatMessageRecord;
 import cn.autumn.chat.domain.UserDomainService;
+import cn.autumn.chat.exception.BusinessException;
+import cn.autumn.chat.util.db.UserDB;
 import com.zhipu.oapi.service.v4.model.ChatMessageRole;
 import io.ebean.DB;
 import lombok.AllArgsConstructor;
@@ -42,7 +45,11 @@ public class ChatMessageRecordService extends UserDomainService<ChatMessageRecor
     }
 
     public void clearByChatId(Long chatId) {
-        DB.deleteAll(DB.find(ChatMessageRecord.class).where().eq("chat.id", chatId).findList());
+        final Chat chat = UserDB.find(Chat.class, chatId);
+        if (chat == null) {
+            throw new BusinessException("没有权限！");
+        }
+        DB.deleteAll(DB.find(ChatMessageRecord.class).where().eq("chat", chat).findList());
     }
 
     public Optional<ChatMessageRecord> getByAnswerId(Long msgId) {

@@ -1,5 +1,6 @@
 package cn.autumn.chat.util;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.Map;
@@ -7,64 +8,85 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static org.springframework.web.servlet.mvc.method.annotation.SseEmitter.event;
 
+@Slf4j
 public class SSEUtils {
     // timeout
-    private static Long DEFAULT_TIME_OUT = 5 * 60 * 1000L;
+    private static Long DEFAULT_TIME_OUT =5 * 60 * 1000L;
 
-    private static final Map<String, SseEmitter> subscribeMap = new ConcurrentHashMap<>();
+    // 为每个组和用户存储 SseEmitters
+    private static final Map<String, Map<String, SseEmitter>> subscribeMap = new ConcurrentHashMap<>();
 
     /**
-     * 添加订阅
+     * 为组中的用户添加订阅。
+     *
      */
-    public static SseEmitter addSub(String subId) {
-        if (null == subId || "".equals(subId)) {
+    public static SseEmitter addSub(String groupId, String userId) {
+        if (null == groupId || null == userId || groupId.isEmpty() || userId.isEmpty()) {
             return null;
         }
 
-        SseEmitter emitter = subscribeMap.get(subId);
+        Map<String, SseEmitter> userSubscriptions = subscribeMap.computeIfAbsent(groupId, k -> new ConcurrentHashMap<>());
+        SseEmitter emitter = userSubscriptions.get(userId);
         if (null == emitter) {
             emitter = new SseEmitter(DEFAULT_TIME_OUT);
 
             emitter.onTimeout(() -> {
-                // 注册超时回调，超时后触发
-                System.out.println("onTimeout,subId=" + subId);
-                closeSub(subId);
+                log.info("onTimeout,groupId=" + groupId + ",userId=" + userId);
+                closeSub(groupId, userId);
             });
 
             emitter.onCompletion(() -> {
-                // 注册完成回调，调用 emitter.complete() 触发
-                System.out.println("onCompletion,subId=" + subId);
-                closeSub(subId);
+                log.info("onCompletion,groupId=" + groupId + ",userId=" + userId);
+                closeSub(groupId, userId);
             });
-            subscribeMap.put(subId, emitter);
+
+            userSubscriptions.put(userId, emitter);
         }
         return emitter;
     }
 
-    public static void pubMsg(String subId, String name, String id, Object msg) {
-        SseEmitter emitter = subscribeMap.get(subId);
-        if (null != emitter) {
-            try {
-                System.out.println(msg);
-                // 更规范的消息结构看源码
-                emitter.send(event().name(name).id(id).data(msg));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+    /**
+     * 向组中的所有用户发布消息。
+     */
+    public static void pubMsgToGroup(String groupId, String name, String id, Object msg) {
+        Map<String, SseEmitter> userSubscriptions = subscribeMap.get(groupId);
+        if (userSubscriptions != null) {
+            userSubscriptions.forEach((userId, emitter) -> {
+                try {
+                    emitter.send(event().name(name).id(id).data(msg));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
 
-    // 关闭订阅
-    public static void closeSub(String subId) {
-        SseEmitter emitter = subscribeMap.get(subId);
-        if (null != emitter) {
-            try {
-                emitter.complete();
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                subscribeMap.remove(subId);
+    // 关闭组中用户的订阅
+    public static void closeSub(String groupId, String ... userIds) {
+        Map<String, SseEmitter> userSubscriptions = subscribeMap.get(groupId);
+        if (userSubscriptions == null) {
+            return;
+        }
+        if (userIds == null || userIds.length == 0) {
+            subscribeMap.remove(groupId);
+            return;
+        }
+        for (String userId : userIds) {
+            SseEmitter emitter = userSubscriptions.get(userId);
+            if (emitter != null) {
+                try {
+                    emitter.complete();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    userSubscriptions.remove(userId);
+                    if (userSubscriptions.isEmpty()) {
+                        subscribeMap.remove(groupId);
+                    }
+                }
             }
         }
+
     }
+
 }

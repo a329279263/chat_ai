@@ -25,6 +25,7 @@
 <script src="js/stomp.min.js"></script>
 <script src="js/markdown-it.js"></script>
 <script src="js/jquery-3.6.0.min.js"></script>
+<script src="js/common.js"></script>
 <script>
     const SYSTEM_PROMPT = "system_prompt";
     // 获取查询参数
@@ -37,11 +38,13 @@
         location.href = "/chatAi/local/";
     }
 
+    const GROUP_KEY = "group_id";
 
+    const username = getQueryParam("username") || sessionStorage.getItem(GROUP_KEY) || generateUniqueID()
     // 获取令牌
-    const token = `Bearer ${getQueryParam("username") || "admin123"}`;
-
-    // 使用该函数来定义发送消息和停止回答的路径
+    const token = `Bearer ${username}`;
+    // 存储组ID
+    sessionStorage.setItem(GROUP_KEY, username);
     const sendMessagePath = `/chat/sendMessage/`;
     const sendStopPath = `/chat/stopAnswering/`;
 
@@ -50,7 +53,6 @@
 
 </script>
 <script src="js/index.js"></script>
-<script src="js/common.js"></script>
 <script>
     function sendMessage() {
         if (!userInputField.value)return;
@@ -73,11 +75,13 @@
             headers: {
                 'Authorization': token,
             },
-            success: function () {
+            success: function (res) {
+                if (res.code !== 200) {
+                    $.notify(res.msg);
+                }
             }
         });
-        chat.innerHTML="";
-        $('body').notify('消息已清空');
+
     }
 
     (function () {
@@ -94,6 +98,39 @@
         });
     })()
 
+    let reconnectInterval = 1000; // 重连间隔（毫秒）
+    let reconnectAttempts = 0; // 重试次数
+
+    function connect() {
+        // 创建 EventSource 实例
+        const eventSource = new EventSource(`/chat_ai/message/subscribeNotice?groupId=${groupId}&subId=${username}`);
+
+        // 监听服务器发送的消息
+        eventSource.onmessage = (event) => {
+            console.log('New message from server:', event.data);
+            reconnectAttempts = 0; // 重置重试次数
+            chat.innerHTML="";
+            $('body').notify('消息已被清空');
+        };
+
+        // 监听错误
+        eventSource.onerror = (event) => {
+            console.log('Connection failed:', event);
+            // 断开连接
+            eventSource.close();
+            // 使用指数退避算法来决定下一次重试的间隔
+            reconnectInterval = Math.min(reconnectInterval * 2, 30000); // 最大重试间隔设置为30秒
+            // 增加重试次数
+            reconnectAttempts++;
+
+            // 尝试重新连接
+            setTimeout(() => {
+                connect();
+            }, reconnectInterval);
+        };
+    }
+    // 初始化连接
+    connect();
 
 </script>
 </body>

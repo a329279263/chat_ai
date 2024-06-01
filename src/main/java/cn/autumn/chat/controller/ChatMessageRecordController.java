@@ -4,11 +4,15 @@ import cn.autumn.chat.domain.ChatMessageRecord;
 import cn.autumn.chat.domain.vo.R;
 import cn.autumn.chat.domain.vo.resp.ChatMessageRecordResp;
 import cn.autumn.chat.service.ChatMessageRecordService;
+import cn.autumn.chat.util.SSEUtils;
 import cn.hutool.core.bean.BeanUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
 
@@ -42,7 +46,15 @@ public class ChatMessageRecordController {
     @GetMapping("/clearByChatId/{id}")
     public R<?> clearByChatId(@PathVariable Long id) {
         messageRecordService.clearByChatId(id);
+        final String groupId = String.valueOf(id);
+        SSEUtils.pubMsgToGroup(groupId, "", groupId, groupId + " - clear message " );
         return R.ok("ok");
+    }
+    @RequestMapping(value = "/subscribeNotice", method = RequestMethod.GET, produces = {MediaType.TEXT_EVENT_STREAM_VALUE})
+    public SseEmitter subscribeNotice(HttpServletRequest request) {
+        final String groupId = request.getParameter("groupId");
+        final String subId = request.getParameter("subId");
+        return SSEUtils.addSub(groupId,subId);
     }
 
 }
