@@ -61,9 +61,9 @@ datasource:
 
 ebean:
   ddl:
-    generate: true
+    generate: false
     # 设置为 true 会建表
-    run: true
+    run: false
 #    run: true
 
 redis:
