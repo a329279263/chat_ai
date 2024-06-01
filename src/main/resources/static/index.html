@@ -104,7 +104,6 @@
     // 监听服务器发送的消息
     eventSource.onmessage = (event) => {
         console.log('New message from server:', event.data);
-        reconnectAttempts = 0; // 重置重试次数
         chat.innerHTML="";
         $('body').notify('消息已被清空');
     };
