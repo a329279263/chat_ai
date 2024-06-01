@@ -37,6 +37,7 @@
     const GROUP_KEY = "group_id";
     const HISTORY_KEY = "history_list";
     const SYSTEM_PROMPT = "system_prompt";
+    const MAX_HISTORY_LENGTH = 20;
 
 
     // 获取组ID
@@ -83,7 +84,7 @@
         history.push(obj)
         let result = JSON.stringify(history)
         localStorage.setItem(HISTORY_KEY, result)
-        return result;
+        return JSON.stringify(history.slice(-MAX_HISTORY_LENGTH));
     }
 
     function getMessageList() {
